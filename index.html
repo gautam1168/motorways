@@ -23,24 +23,30 @@
       const TileSideY = canvas.height / maxTileY;
       
       // graph
-      const nodes = ["A", "B"];
-      const nodesLayout = [[0, 0], [0, 1]]
+      const nodesLayout = new Array(9).fill(0).map(it => new Array(10).fill(0));
+
+      nodesLayout[0][0] = "A";
+      nodesLayout[0][1] = "B";
+      nodesLayout[1][3] = "C";
+
       const edges = {
         A: ["B"]
       };
 
-      DrawNodes(nodes, nodesLayout);
+      DrawNodes(nodesLayout);
 
       function DrawGraph(nodes, edges) {
 
       }
 
-      function DrawNodes(nodes, nodesLayout) {
+      function DrawNodes(nodesLayout) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const buffer = new Uint32Array(imageData.data.buffer);
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
-            DrawTile(buffer, Col, Row, 0xccccccff);
+            if (nodesLayout[Row][Col] !== 0) {
+              DrawTile(buffer, Col, Row, 0xccccccff);
+            }
           }
         }
         ctx.putImageData(imageData, 0, 0);
