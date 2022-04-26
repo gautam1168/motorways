@@ -35,15 +35,30 @@
         C: ["D"]
       };
 
-      DrawGraph(edges, nodesLayout);
+      renderLoop();
+
+      function renderLoop() {
+        requestAnimationFrame(() => {
+          DrawGraph(edges, nodesLayout);
+          renderLoop();
+        })
+      }
 
       function DrawGraph(edges, nodesLayout) {
+        const t0 = performance.now();
         DrawNodes(edges, nodesLayout);
+        const t1 = performance.now();
+        // console.log(`Time for frame: ${Math.floor(t1 - t0)}ms`);
       }
 
       function DrawNodes(edges, nodesLayout) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const buffer = new Uint32Array(imageData.data.buffer);
+
+        for (let i = 0; i < buffer.length; i++) {
+          buffer[i] = 0xffffffff;
+        }
+
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
             let node = nodesLayout[Row][Col];
@@ -52,6 +67,7 @@
             }
           }
         }
+
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
             let node = nodesLayout[Row][Col];
@@ -63,7 +79,7 @@
                       RowEnd = Row-1;
                   }
                 } catch (err) {
-                  console.error("Out of bounds");
+                  // console.error("Out of bounds");
                 }
 
                 try {
@@ -71,7 +87,7 @@
                       RowEnd = Row+1;
                   }
                 } catch (err) {
-                  console.error("Out of bounds");
+                  // console.error("Out of bounds");
                 }
 
                 try {
@@ -79,7 +95,7 @@
                       ColEnd = Col-1;
                   }
                 } catch (err) {
-                  console.error("Out of bounds");
+                  // console.error("Out of bounds");
                 }
 
                 try {
@@ -87,7 +103,7 @@
                       ColEnd = Col+1;
                   }
                 } catch (err) {
-                  console.error("Out of bounds");
+                  // console.error("Out of bounds");
                 }
                 DrawLine(buffer, Col, Row, ColEnd, RowEnd);
               }
