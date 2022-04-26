@@ -40,23 +40,23 @@
         const buffer = new Uint32Array(imageData.data.buffer);
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
-            const padding = 1;
-            const MinX = Math.floor((TileSideX * Col) + padding);
-            const MinY = Math.floor((TileSideY * Row) + padding);
-            const MaxX = Math.floor((MinX + TileSideX) - (2 * padding));
-            const MaxY = Math.floor((MinY + TileSideY) - (2 * padding));
-
-            DrawTile(buffer, MinX, MinY, MaxX, MaxY);
+            DrawTile(buffer, Col, Row, 0xccccccff);
           }
         }
         ctx.putImageData(imageData, 0, 0);
       }
 
-      function DrawTile(buffer, MinX, MinY, MaxX, MaxY) {
+      function DrawTile(buffer, TileX, TileY, Color) {
+        const padding = 1;
+        const MinX = Math.floor((TileSideX * TileX) + padding);
+        const MinY = Math.floor((TileSideY * TileY) + padding);
+        const MaxX = Math.floor((MinX + TileSideX) - (2 * padding));
+        const MaxY = Math.floor((MinY + TileSideY) - (2 * padding));
+
         for (let Row = MinY; Row <= MaxY; Row++) {
           for (let Col = MinX; Col <= MaxX; Col ++) {
             const pixelIndex = Row * canvas.width + Col;
-            buffer[pixelIndex] = 0xccccccff;
+            buffer[pixelIndex] = Color;
           }
         }
       }
