@@ -28,28 +28,88 @@
       nodesLayout[0][0] = "A";
       nodesLayout[0][1] = "B";
       nodesLayout[1][3] = "C";
+      nodesLayout[2][3] = "D";
 
       const edges = {
-        A: ["B"]
+        A: ["B"],
+        C: ["D"]
       };
 
-      DrawNodes(nodesLayout);
+      DrawGraph(edges, nodesLayout);
 
-      function DrawGraph(nodes, edges) {
-
+      function DrawGraph(edges, nodesLayout) {
+        DrawNodes(edges, nodesLayout);
       }
 
-      function DrawNodes(nodesLayout) {
+      function DrawNodes(edges, nodesLayout) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const buffer = new Uint32Array(imageData.data.buffer);
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
-            if (nodesLayout[Row][Col] !== 0) {
-              DrawTile(buffer, Col, Row, 0xccccccff);
+            let node = nodesLayout[Row][Col];
+            if (node !== 0) {
+              DrawTile(buffer, Col, Row, 0xffcccccc);
+            }
+          }
+        }
+        for (let Row = 0; Row < maxTileY; Row++) {
+          for (let Col = 0; Col < maxTileX; Col++) {
+            let node = nodesLayout[Row][Col];
+            if (edges[node]) {
+              for (let OtherEnd of edges[node]) {
+                let RowEnd = Row, ColEnd = Col;
+                try {
+                  if (nodesLayout[Row - 1][Col] === OtherEnd) {
+                      RowEnd = Row-1;
+                  }
+                } catch (err) {
+                  console.error("Out of bounds");
+                }
+
+                try {
+                  if (nodesLayout[Row + 1][Col] === OtherEnd) {
+                      RowEnd = Row+1;
+                  }
+                } catch (err) {
+                  console.error("Out of bounds");
+                }
+
+                try {
+                  if (nodesLayout[Row][Col - 1] === OtherEnd) {
+                      ColEnd = Col-1;
+                  }
+                } catch (err) {
+                  console.error("Out of bounds");
+                }
+
+                try {
+                  if (nodesLayout[Row][Col + 1] === OtherEnd) {
+                      ColEnd = Col+1;
+                  }
+                } catch (err) {
+                  console.error("Out of bounds");
+                }
+                DrawLine(buffer, Col, Row, ColEnd, RowEnd);
+              }
             }
           }
         }
         ctx.putImageData(imageData, 0, 0);
+      }
+
+      function DrawLine(buffer, TileStartX, TileStartY, TileEndX, TileEndY) {
+        const padding = 1;
+        const MinX = Math.floor((TileSideX * 0.5 * (TileStartX + TileEndX)) + padding + 20);
+        const MinY = Math.floor((TileSideY * 0.5 * (TileStartY + TileEndY)) + padding + 20);
+        const MaxX = Math.floor((MinX + TileSideX) - (2 * padding) - 40);
+        const MaxY = Math.floor((MinY + TileSideY) - (2 * padding) - 40);
+
+        for (let Row = MinY; Row <= MaxY; Row++) {
+          for (let Col = MinX; Col <= MaxX; Col ++) {
+            const pixelIndex = Row * canvas.width + Col;
+            buffer[pixelIndex] = 0xff000000;
+          }
+        }       
       }
 
       function DrawTile(buffer, TileX, TileY, Color) {
