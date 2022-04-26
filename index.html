@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test</title>
+    <style>
+      canvas {
+        border: solid;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas></canvas>
+    <script>
+      const canvas = document.querySelector("canvas");
+      canvas.height = 512;
+      canvas.width = 1024;
+      const ctx = canvas.getContext("2d");
+      
+      // renderer
+      const maxTileX = 10;
+      const maxTileY = 9; 
+      const TileSideX = canvas.width / maxTileX;
+      const TileSideY = canvas.height / maxTileY;
+      
+      // graph
+      const nodes = ["A", "B"];
+      const nodesLayout = [[0, 0], [0, 1]]
+      const edges = {
+        A: ["B"]
+      };
+
+      DrawNodes(nodes, nodesLayout);
+
+      function DrawGraph(nodes, edges) {
+
+      }
+
+      function DrawNodes(nodes, nodesLayout) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const buffer = new Uint32Array(imageData.data.buffer);
+        for (let Row = 0; Row < maxTileY; Row++) {
+          for (let Col = 0; Col < maxTileX; Col++) {
+            const padding = 1;
+            const MinX = Math.floor((TileSideX * Col) + padding);
+            const MinY = Math.floor((TileSideY * Row) + padding);
+            const MaxX = Math.floor((MinX + TileSideX) - (2 * padding));
+            const MaxY = Math.floor((MinY + TileSideY) - (2 * padding));
+
+            DrawTile(buffer, MinX, MinY, MaxX, MaxY);
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      function DrawTile(buffer, MinX, MinY, MaxX, MaxY) {
+        for (let Row = MinY; Row <= MaxY; Row++) {
+          for (let Col = MinX; Col <= MaxX; Col ++) {
+            const pixelIndex = Row * canvas.width + Col;
+            buffer[pixelIndex] = 0xccccccff;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
