@@ -35,30 +35,44 @@
         C: ["D"]
       };
 
+      let x = 0, y = 0;
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const buffer = new Uint32Array(imageData.data.buffer);
+
       renderLoop();
+
+      canvas.addEventListener("mousemove", ev => {
+        x = ev.offsetX;
+        y = ev.offsetY;
+      });
 
       function renderLoop() {
         requestAnimationFrame(() => {
-          DrawGraph(edges, nodesLayout);
+          DrawFrame(edges, nodesLayout);
           renderLoop();
         })
       }
 
-      function DrawGraph(edges, nodesLayout) {
-        const t0 = performance.now();
-        DrawNodes(edges, nodesLayout);
-        const t1 = performance.now();
-        // console.log(`Time for frame: ${Math.floor(t1 - t0)}ms`);
-      }
-
-      function DrawNodes(edges, nodesLayout) {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const buffer = new Uint32Array(imageData.data.buffer);
-
+      function DrawFrame(edges, nodesLayout) {
+        // const t0 = performance.now();
         for (let i = 0; i < buffer.length; i++) {
           buffer[i] = 0xffffffff;
         }
+        DrawNodes(edges, nodesLayout);
+        DrawHoveredTile(x, y);
+        ctx.putImageData(imageData, 0, 0);
+        // const t1 = performance.now();
+        // const timeForFrame = Math.floor(t1 - t0);
+        // console.log(`Time for frame: ${timeForFrame}ms, Frames Per Second: ${Math.floor(1000/timeForFrame)}`);
+      }
 
+      function DrawHoveredTile(x, y) {
+        const TileX = Math.floor(x / TileSideX);
+        const TileY = Math.floor(y / TileSideY);
+        DrawTile(buffer, TileX, TileY, 0xffcccccc);
+      }
+
+      function DrawNodes(edges, nodesLayout) {
         for (let Row = 0; Row < maxTileY; Row++) {
           for (let Col = 0; Col < maxTileX; Col++) {
             let node = nodesLayout[Row][Col];
@@ -110,7 +124,6 @@
             }
           }
         }
-        ctx.putImageData(imageData, 0, 0);
       }
 
       function DrawLine(buffer, TileStartX, TileStartY, TileEndX, TileEndY) {
