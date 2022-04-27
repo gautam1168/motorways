@@ -133,10 +133,24 @@
         const MaxX = Math.floor((MinX + TileSideX) - (2 * padding) - 40);
         const MaxY = Math.floor((MinY + TileSideY) - (2 * padding) - 40);
 
+        let LineIsHorizontal = TileStartX != TileEndX;
+
         for (let Row = MinY; Row <= MaxY; Row++) {
           for (let Col = MinX; Col <= MaxX; Col ++) {
             const pixelIndex = Row * canvas.width + Col;
-            buffer[pixelIndex] = 0xff000000;
+            if (LineIsHorizontal) {
+              if ((Row < MinY + 0.1 * (MaxY - MinY)) || (Row > MinY + 0.9 * (MaxY - MinY))) {
+                buffer[pixelIndex] = 0xff00ff00;
+              } else {
+                buffer[pixelIndex] = 0xff000000;
+              }
+            } else {
+              if ((Col < MinX + 0.1 * (MaxX - MinX)) || (Col > MinX + 0.9 * (MaxX - MinX))) {
+                buffer[pixelIndex] = 0xff00ff00;
+              } else {
+                buffer[pixelIndex] = 0xff000000;
+              }
+            }
           }
         }       
       }
