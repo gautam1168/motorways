@@ -120,6 +120,8 @@
                 } catch (err) {
                   // console.error("Out of bounds");
                 }
+                DrawCircle(buffer, Col, Row);
+                DrawCircle(buffer, ColEnd, RowEnd);
                 DrawLine(buffer, Col, Row, ColEnd, RowEnd);
               }
             }
@@ -135,7 +137,7 @@
 
         let MinY = Math.floor(TileSideY * 0.5 * (TileStartY + TileEndY));
         let MaxY = Math.floor(MinY + TileSideY);
-        
+
         if (LineIsHorizontal) {
           MinY = Math.floor((TileStartY + 0.5) * TileSideY - 10);
           MaxY = Math.floor((TileStartY + 0.5) * TileSideY + 10);
@@ -196,7 +198,8 @@
             const DistFromCenter = Distance(cx, cy, Col, Row);
             if (DistFromCenter - radius < 0) {
               buffer[pixelIndex] = 0xff000000;
-            } else if (DistFromCenter - radius < 2) {
+            } 
+            if (DistFromCenter - radius > -2 && DistFromCenter - radius < 0) {
               buffer[pixelIndex] = 0xff00ff00;
             }
           }
