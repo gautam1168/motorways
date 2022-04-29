@@ -36,6 +36,7 @@
       };
 
       let x = 0, y = 0;
+      let mouseIsDown = false;
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const buffer = new Uint32Array(imageData.data.buffer);
 
@@ -44,6 +45,14 @@
       canvas.addEventListener("mousemove", ev => {
         x = ev.offsetX;
         y = ev.offsetY;
+      });
+
+      canvas.addEventListener("mousedown", ev => {
+        mouseIsDown = true;
+      });
+
+      canvas.addEventListener("mouseup", ev => {
+        mouseIsDown = false;
       });
 
       function renderLoop() {
@@ -59,7 +68,7 @@
           buffer[i] = 0xffffffff;
         }
         DrawNodes(edges, nodesLayout);
-        DrawHoveredTile(x, y);
+        // DrawHoveredTile(x, y);
         ctx.putImageData(imageData, 0, 0);
         // const t1 = performance.now();
         // const timeForFrame = Math.floor(t1 - t0);
@@ -69,8 +78,8 @@
       function DrawHoveredTile(x, y) {
         const TileX = Math.floor(x / TileSideX);
         const TileY = Math.floor(y / TileSideY);
-        DrawTile(buffer, TileX, TileY, 0xffcccccc);
-        DrawCircle(buffer, TileX, TileY);
+        // DrawTile(buffer, TileX, TileY, 0xffcccccc);
+        DrawCircleAtTile(buffer, TileX, TileY, 20, 0xffcccccc, 0xffcccccc);
       }
 
       function DrawNodes(edges, nodesLayout) {
@@ -79,6 +88,10 @@
             let node = nodesLayout[Row][Col];
             if (node !== 0) {
               DrawTile(buffer, Col, Row, 0xffcccccc);
+            }
+            if (mouseIsDown) {
+              DrawTileBox(buffer, Col, Row, 0xffcccccc);
+              DrawHoveredTile(x, y);
             }
           }
         }
@@ -120,8 +133,8 @@
                 } catch (err) {
                   // console.error("Out of bounds");
                 }
-                DrawCircle(buffer, Col, Row);
-                DrawCircle(buffer, ColEnd, RowEnd);
+                DrawCircleAtTile(buffer, Col, Row, 10, 0xff000000, 0xff00ff00);
+                DrawCircleAtTile(buffer, ColEnd, RowEnd, 10, 0xff000000, 0xff00ff00);
                 DrawLine(buffer, Col, Row, ColEnd, RowEnd);
               }
             }
@@ -181,26 +194,43 @@
         }
       }
 
-      function DrawCircle(buffer, TileX, TileY) {
-        const padding = 1;
-        const MinX = Math.floor((TileSideX * TileX) + padding);
-        const MinY = Math.floor((TileSideY * TileY) + padding);
-        const MaxX = Math.floor((MinX + TileSideX) - (2 * padding));
-        const MaxY = Math.floor((MinY + TileSideY) - (2 * padding));
+      function DrawTileBox(buffer, TileX, TileY, Color) {
+        const MinX = Math.floor((TileSideX * TileX));
+        const MinY = Math.floor((TileSideY * TileY));
+        const MaxX = Math.floor((MinX + TileSideX));
+        const MaxY = Math.floor((MinY + TileSideY));
+
+        for (let Row = MinY; Row <= MaxY; Row++) {
+          for (let Col = MinX; Col <= MaxX; Col ++) {
+            if (Row !== MinY && Row !== MaxY) {
+              if (Col !== MinX && Col !== MaxX) {
+                continue;
+              }
+            } 
+            const pixelIndex = Row * canvas.width + Col;
+            buffer[pixelIndex] = Color;
+          }
+        }
+      }
+
+      function DrawCircleAtTile(buffer, TileX, TileY, Radius, FillColor, BorderColor) {
+        const MinX = Math.floor(TileSideX * TileX);
+        const MinY = Math.floor(TileSideY * TileY);
+        const MaxX = Math.floor(MinX + TileSideX);
+        const MaxY = Math.floor(MinY + TileSideY);
 
         const cx = Math.floor((MinX + MaxX) * 0.5);
         const cy = Math.floor((MinY + MaxY) * 0.5);
-        const radius = 10;
 
         for (let Row = MinY; Row <= MaxY; Row++) {
           for (let Col = MinX; Col <= MaxX; Col++) {
             const pixelIndex = Row * canvas.width + Col;
             const DistFromCenter = Distance(cx, cy, Col, Row);
-            if (DistFromCenter - radius < 0) {
-              buffer[pixelIndex] = 0xff000000;
+            if (DistFromCenter - Radius < 0) {
+              buffer[pixelIndex] = FillColor;
             } 
-            if (DistFromCenter - radius > -2 && DistFromCenter - radius < 0) {
-              buffer[pixelIndex] = 0xff00ff00;
+            if (DistFromCenter - Radius > -2 && DistFromCenter - Radius < 0) {
+              buffer[pixelIndex] = BorderColor;
             }
           }
         }
