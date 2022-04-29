@@ -12,18 +12,18 @@
     <canvas></canvas>
     <script>
       const canvas = document.querySelector("canvas");
-      canvas.height = 512;
-      canvas.width = 1024;
+      canvas.height = 2 ** 9;
+      canvas.width = 2 ** 10;
       const ctx = canvas.getContext("2d");
       
       // renderer
-      const maxTileX = 10;
-      const maxTileY = 9; 
+      const maxTileX = 2 ** 4; 
+      const maxTileY = 2 ** 3;  
       const TileSideX = canvas.width / maxTileX;
       const TileSideY = canvas.height / maxTileY;
       
       // graph
-      const nodesLayout = new Array(9).fill(0).map(it => new Array(10).fill(0));
+      const nodesLayout = new Array(maxTileY).fill(0).map(it => new Array(maxTileX).fill(0));
 
       nodesLayout[0][0] = "A";
       nodesLayout[0][1] = "B";
@@ -127,13 +127,21 @@
       }
 
       function DrawLine(buffer, TileStartX, TileStartY, TileEndX, TileEndY) {
-        const padding = 1;
-        const MinX = Math.floor((TileSideX * 0.5 * (TileStartX + TileEndX)) + padding + 20);
-        const MinY = Math.floor((TileSideY * 0.5 * (TileStartY + TileEndY)) + padding + 20);
-        const MaxX = Math.floor((MinX + TileSideX) - (2 * padding) - 40);
-        const MaxY = Math.floor((MinY + TileSideY) - (2 * padding) - 40);
-
         let LineIsHorizontal = TileStartX != TileEndX;
+
+        // If line is horizontal
+        let MinX = Math.floor((TileSideX * 0.5 * (TileStartX + TileEndX)) + 20);
+        let MinY = Math.floor((TileSideY * 0.5 * (TileStartY + TileEndY)) + 20);
+        let MaxX = Math.floor((MinX + TileSideX) - 40);
+        let MaxY = Math.floor((MinY + TileSideY) - 40);
+        
+        if (LineIsHorizontal) {
+          MinY = Math.floor((TileStartY + 0.5) * TileSideY - 10);
+          MaxY = Math.floor((TileStartY + 0.5) * TileSideY + 10);
+        } else {                                             
+          MinX = Math.floor((TileStartX + 0.5) * TileSideX - 10);
+          MaxX = Math.floor((TileStartX + 0.5) * TileSideX + 10);
+        }
 
         for (let Row = MinY; Row <= MaxY; Row++) {
           for (let Col = MinX; Col <= MaxX; Col ++) {
