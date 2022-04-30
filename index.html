@@ -143,35 +143,32 @@
         const InitialTileX = Math.floor(mouseDownAtX / TileSideX);
         const InitialTileY = Math.floor(mouseDownAtY / TileSideY);
 
-        if (!nodesLayout[InitialTileY][InitialTileX] && !nodesLayout[CurrentTileY][CurrentTileX]) {
+        // if (!nodesLayout[InitialTileY][InitialTileX] && !nodesLayout[CurrentTileY][CurrentTileX]) {
           const InitialTileCenterX = Math.floor((InitialTileX + 0.5) * TileSideX);
           const InitialTileCenterY = Math.floor((InitialTileY + 0.5) * TileSideY);
-          if (CurrentTileX === InitialTileX && CurrentTileY === InitialTileY) {
+          // if (CurrentTileX === InitialTileX && CurrentTileY === InitialTileY) {
             // In the same block
-            DrawCircleAtTile(buffer, CurrentTileX, CurrentTileY, 10, 0xffcccccc, 0xffcccccc);
-          } else if (InitialTileX < CurrentTileX && CurrentTileY === InitialTileY) {
+            // DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+          // } 
+          DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+          if (InitialTileX < CurrentTileX && CurrentTileY === InitialTileY) {
             // Line to right
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX, InitialTileCenterY - 10, x, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
           } else if (InitialTileX > CurrentTileX && CurrentTileY === InitialTileY) {
             // Line to left
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, x, InitialTileCenterY - 10, InitialTileCenterX, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
           } else if (InitialTileX === CurrentTileX && InitialTileY < CurrentTileY) {
             // Line to bottom
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX - 10, InitialTileCenterY, InitialTileCenterX + 10, y,  Infinity, 0xffcccccc, 0xffcccccc);
           } else if (InitialTileX === CurrentTileX && InitialTileY > CurrentTileY) {
             // Line to top
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
           } else if (InitialTileX < CurrentTileX && InitialTileY < CurrentTileY) {
             // Bottom-right
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             if (x > y) {
               let CorrectedY = InitialTileCenterY + (x - InitialTileCenterX);
               DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
@@ -183,7 +180,6 @@
             }           
           } else if (InitialTileX < CurrentTileX && InitialTileY > CurrentTileY) {
             // Top-right 
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             if (x > y) {
               let CorrectedY = InitialTileCenterY - (x - InitialTileCenterX);
               DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
@@ -195,7 +191,6 @@
             }           
           } else if (InitialTileX > CurrentTileX && InitialTileY > CurrentTileY) {
             // Top-left 
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             if (x > y) {
               let CorrectedY = InitialTileCenterY + (x - InitialTileCenterX);
               DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
@@ -207,7 +202,6 @@
             }           
           } else if (InitialTileX > CurrentTileX && InitialTileY < CurrentTileY) {
             // Top-left 
-            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             if (x > y) {
               let CorrectedY = InitialTileCenterY - (x - InitialTileCenterX);
               DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
@@ -218,7 +212,7 @@
               DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
             }           
           }
-        }
+        // }
       }
 
       function DrawNodes(edges, nodesLayout) {
@@ -226,7 +220,7 @@
           for (let Col = 0; Col < maxTileX; Col++) {
             let node = nodesLayout[Row][Col];
             if (node !== 0) {
-              DrawTile(buffer, Col, Row, 0xffcccccc);
+              // DrawTile(buffer, Col, Row, 0xffcccccc);
             }
             if (mouseIsDown) {
               DrawTileBox(buffer, Col, Row, 0xffcccccc);
