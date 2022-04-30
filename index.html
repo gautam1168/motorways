@@ -153,6 +153,18 @@
             DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
+          } else if (InitialTileX < CurrentTileX && InitialTileY < CurrentTileY) {
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            if (x > y) {
+              let CorrectedY = InitialTileCenterY + (x - InitialTileCenterX);
+              DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, x, CorrectedY,  (CorrectedY - InitialTileCenterY)/(x - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            } else {
+              let CorrectedX = InitialTileCenterX + (y - InitialTileCenterY);
+              DrawCircle(buffer, CorrectedX, y, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            }           
+            // DrawCircle(buffer, x, y, 10, 0xffcccccc, 0xffcccccc);
           } 
         }
       }
@@ -239,17 +251,19 @@
           }
         } else {
           let Col = MinX, Row = MinY;
+          let YLow = Math.min(MinY, MaxY);
+          let YHigh = Math.max(MinY, MaxY);
           while (Col <= MaxX) {
             Row = Row + Slope;
             for (let i = -13; i <= 13; i++) {
-              // if (Row + i <= MaxY && Row + i >= MinY) {
+              if (Row + i <= YHigh && Row + i >= YLow) {
                 const pixelIndex = (Row + i) * canvas.width + Col;
                 if (i < -10 || i > 10) {
                   buffer[pixelIndex] = BorderColor;
                 } else {
                   buffer[pixelIndex] = FillColor;
                 }
-              // }
+              }
             }
             Col++;
           }
