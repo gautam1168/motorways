@@ -36,6 +36,13 @@
         // C: ["D", "E"]
       };
 
+      const sourceNodes = [
+        [0, 0, 0]
+      ];
+      const destNodes = [
+        [4, 5, 0]
+      ];
+
       let x = 0, y = 0;
       let mouseIsDown = false;
       let mouseDownAtX = 0, mouseDownAtY = 0;
@@ -76,6 +83,7 @@
         }
 
         DrawNodes(edges, nodesLayout);
+        DrawLocations(sourceNodes, destNodes);
         if (mouseIsDown) {
           DrawHoveredTile(x, y);
           AddNodeToGraph(x, y);
@@ -84,7 +92,14 @@
         ctx.putImageData(imageData, 0, 0);
         const t1 = performance.now();
         const timeForFrame = Math.floor(t1 - t0);
-        console.log(`Time for frame: ${timeForFrame}ms, Frames Per Second: ${Math.floor(1000/timeForFrame)}`);
+        console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+      }
+
+      function DrawLocations(sourceNodes, destNodes) {
+        for (let item of sourceNodes.concat(destNodes)) {
+          let [TileX, TileY, Color] = item;
+          DrawTile(buffer, TileX, TileY, Color === 0 ? 0xff00ff00 : 0xff000000);
+        }
       }
 
       function AddNodeToGraph(x, y) {
