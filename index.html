@@ -25,20 +25,21 @@
       // graph
       const nodesLayout = new Array(maxTileY).fill(0).map(it => new Array(maxTileX).fill(0));
 
-      // nodesLayout[0][0] = "A";
-      // nodesLayout[0][1] = "B";
-      // nodesLayout[1][3] = "C";
-      // nodesLayout[2][3] = "D";
+      nodesLayout[0][0] = "A";
+      nodesLayout[1][1] = "B";
+      // nodesLayout[3][3] = "C";
+      // nodesLayout[3][4] = "D";
+      // nodesLayout[4][3] = "E";
 
       const edges = {
-        // A: ["B"],
-        // C: ["D"]
+        A: ["B"],
+        // C: ["D", "E"]
       };
 
       let x = 0, y = 0;
       let mouseIsDown = false;
       let mouseDownAtX = 0, mouseDownAtY = 0;
-      let maxNode = "D";
+      let maxNode = "E";
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const buffer = new Uint32Array(imageData.data.buffer);
@@ -175,37 +176,39 @@
             if (edges[node]) {
               for (let OtherEnd of edges[node]) {
                 let RowEnd = Row, ColEnd = Col;
-                try {
-                  if (nodesLayout[Row - 1][Col] === OtherEnd) {
-                      RowEnd = Row-1;
-                  }
-                } catch (err) {
-                  // console.error("Out of bounds");
+
+                const locationsToCheck = [];
+                if (Row - 1 >= 0 && nodesLayout[Row - 1][Col] === OtherEnd) {
+                  // Check to left
+                  RowEnd = Row - 1;
+                } else if (Row + 1 < maxTileY && nodesLayout[Row + 1][Col] === OtherEnd) {
+                  // Check to right
+                  RowEnd = Row + 1;
+                } else if (Col - 1 >= 0 && nodesLayout[Row][Col - 1] === OtherEnd) {
+                  // Check on top
+                  ColEnd = Col - 1;
+                } else if (Col + 1 <= maxTileY && nodesLayout[Row][Col + 1] === OtherEnd) {
+                  // Check at bottom
+                  ColEnd = Col + 1;
+                } else if (Row - 1 >= 0 && Col - 1 >= 0 && nodesLayout[Row - 1][Col - 1] === OtherEnd) {
+                  // Check topleft
+                  ColEnd = Col - 1;
+                  RowEnd = Row - 1;
+                } else if (Row - 1 >= 0 && Col + 1 < maxTileX && nodesLayout[Row - 1][Col + 1] === OtherEnd) {
+                  // Check topright
+                  ColEnd = Col + 1;
+                  RowEnd = Row - 1;
+                } else if (Row + 1 < maxTileY && Col - 1 >= 0 && nodesLayout[Row + 1][Col - 1] === OtherEnd) {
+                  // Check bottomleft
+                  ColEnd = Col - 1;
+                  RowEnd = Row + 1;
+                } else if (Row + 1 < maxTileX && Col + 1 <= maxTileX && nodesLayout[Row + 1][Col + 1] === OtherEnd) {
+                  // Check bottomright
+                  ColEnd = Col + 1;
+                  RowEnd = Row + 1;
                 }
 
-                try {
-                  if (nodesLayout[Row + 1][Col] === OtherEnd) {
-                      RowEnd = Row+1;
-                  }
-                } catch (err) {
-                  // console.error("Out of bounds");
-                }
-
-                try {
-                  if (nodesLayout[Row][Col - 1] === OtherEnd) {
-                      ColEnd = Col-1;
-                  }
-                } catch (err) {
-                  // console.error("Out of bounds");
-                }
-
-                try {
-                  if (nodesLayout[Row][Col + 1] === OtherEnd) {
-                      ColEnd = Col+1;
-                  }
-                } catch (err) {
-                  // console.error("Out of bounds");
-                }
+                
                 DrawCircleAtTile(buffer, Col, Row, 10, 0xff000000, 0xff00ff00);
                 DrawCircleAtTile(buffer, ColEnd, RowEnd, 10, 0xff000000, 0xff00ff00);
                 DrawLineBetweenTiles(buffer, Col, Row, ColEnd, RowEnd);
