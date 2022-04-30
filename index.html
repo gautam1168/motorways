@@ -76,6 +76,7 @@
         DrawNodes(edges, nodesLayout);
         if (mouseIsDown) {
           DrawHoveredTile(x, y);
+          AddNodeToGraph(x, y);
         }
 
         ctx.putImageData(imageData, 0, 0);
@@ -84,7 +85,7 @@
         console.log(`Time for frame: ${timeForFrame}ms, Frames Per Second: ${Math.floor(1000/timeForFrame)}`);
       }
 
-      function DrawHoveredTile(x, y) {
+      function AddNodeToGraph(x, y) {
         const CurrentTileX = Math.floor(x / TileSideX);
         const CurrentTileY = Math.floor(y / TileSideY);
         const InitialTileX = Math.floor(mouseDownAtX / TileSideX);
@@ -92,29 +93,56 @@
 
         const InitialTileCenterX = Math.floor((InitialTileX + 0.5) * TileSideX);
         const InitialTileCenterY = Math.floor((InitialTileY + 0.5) * TileSideY);
-        if (CurrentTileX === InitialTileX && CurrentTileY === InitialTileY) {
-          // In the same block
-          DrawCircleAtTile(buffer, CurrentTileX, CurrentTileY, 10, 0xffcccccc, 0xffcccccc);
-        } else if (InitialTileX < CurrentTileX && CurrentTileY === InitialTileY) {
+
+        const CurrentTileCenterX = Math.floor((CurrentTileX + 0.5) * TileSideX);
+
+        if (InitialTileX < CurrentTileX && x >= CurrentTileCenterX) {
           // Line to right
-          DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawLine(buffer, InitialTileCenterX, InitialTileCenterY - 10, x, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
-        } else if (InitialTileX > CurrentTileX && CurrentTileY === InitialTileY) {
-          // Line to left
-          DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawLine(buffer, x, InitialTileCenterY - 10, InitialTileCenterX, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
-        } else if (InitialTileX === CurrentTileX && InitialTileY < CurrentTileY) {
-          // Line to bottom
-          DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
-          DrawLine(buffer, InitialTileCenterX - 10, InitialTileCenterY, InitialTileCenterX + 10, y,  Infinity, 0xffcccccc, 0xffcccccc);
-        } else if (InitialTileX === CurrentTileX && InitialTileY > CurrentTileY) {
-          // Line to top
-          DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
-          DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
-          DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
+          if (!nodesLayout[InitialTileY][InitialTileX]) {
+            nodesLayout[InitialTileY][InitialTileX] = "E";
+          }
+          if (!nodesLayout[CurrentTileY][CurrentTileX]) {
+            nodesLayout[CurrentTileY][CurrentTileX] = "F";
+          }
+          if (!edges["E"] || !edges["E"].includes("F")) {
+            edges["E"] = ["F"]
+          }
+        }
+      }
+
+      function DrawHoveredTile(x, y) {
+        const CurrentTileX = Math.floor(x / TileSideX);
+        const CurrentTileY = Math.floor(y / TileSideY);
+        const InitialTileX = Math.floor(mouseDownAtX / TileSideX);
+        const InitialTileY = Math.floor(mouseDownAtY / TileSideY);
+
+        if (!nodesLayout[InitialTileY][InitialTileX] && !nodesLayout[CurrentTileY][CurrentTileX]) {
+          const InitialTileCenterX = Math.floor((InitialTileX + 0.5) * TileSideX);
+          const InitialTileCenterY = Math.floor((InitialTileY + 0.5) * TileSideY);
+          if (CurrentTileX === InitialTileX && CurrentTileY === InitialTileY) {
+            // In the same block
+            DrawCircleAtTile(buffer, CurrentTileX, CurrentTileY, 10, 0xffcccccc, 0xffcccccc);
+          } else if (InitialTileX < CurrentTileX && CurrentTileY === InitialTileY) {
+            // Line to right
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawLine(buffer, InitialTileCenterX, InitialTileCenterY - 10, x, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
+          } else if (InitialTileX > CurrentTileX && CurrentTileY === InitialTileY) {
+            // Line to left
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawCircle(buffer, x, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawLine(buffer, x, InitialTileCenterY - 10, InitialTileCenterX, InitialTileCenterY + 10, 0, 0xffcccccc, 0xffcccccc);
+          } else if (InitialTileX === CurrentTileX && InitialTileY < CurrentTileY) {
+            // Line to bottom
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
+            DrawLine(buffer, InitialTileCenterX - 10, InitialTileCenterY, InitialTileCenterX + 10, y,  Infinity, 0xffcccccc, 0xffcccccc);
+          } else if (InitialTileX === CurrentTileX && InitialTileY > CurrentTileY) {
+            // Line to top
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
+            DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
+          }
         }
       }
 
