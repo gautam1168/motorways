@@ -154,6 +154,7 @@
             DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
           } else if (InitialTileX < CurrentTileX && InitialTileY < CurrentTileY) {
+            // Bottom-right
             DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             if (x > y) {
               let CorrectedY = InitialTileCenterY + (x - InitialTileCenterX);
@@ -164,8 +165,43 @@
               DrawCircle(buffer, CorrectedX, y, 10, 0xffcccccc, 0xffcccccc);
               DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
             }           
-            // DrawCircle(buffer, x, y, 10, 0xffcccccc, 0xffcccccc);
-          } 
+          } else if (InitialTileX < CurrentTileX && InitialTileY > CurrentTileY) {
+            // Top-right 
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            if (x > y) {
+              let CorrectedY = InitialTileCenterY - (x - InitialTileCenterX);
+              DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, x, CorrectedY,  (CorrectedY - InitialTileCenterY)/(x - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            } else {
+              let CorrectedX = InitialTileCenterX - (y - InitialTileCenterY);
+              DrawCircle(buffer, CorrectedX, y, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            }           
+          } else if (InitialTileX > CurrentTileX && InitialTileY > CurrentTileY) {
+            // Top-left 
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            if (x > y) {
+              let CorrectedY = InitialTileCenterY + (x - InitialTileCenterX);
+              DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, x, CorrectedY,  (CorrectedY - InitialTileCenterY)/(x - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            } else {
+              let CorrectedX = InitialTileCenterX - (y - InitialTileCenterY);
+              DrawCircle(buffer, CorrectedX, y, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            }           
+          } else if (InitialTileX > CurrentTileX && InitialTileY < CurrentTileY) {
+            // Top-left 
+            DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
+            if (x > y) {
+              let CorrectedY = InitialTileCenterY - (x - InitialTileCenterX);
+              DrawCircle(buffer, x, CorrectedY, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, x, CorrectedY,  (CorrectedY - InitialTileCenterY)/(x - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            } else {
+              let CorrectedX = InitialTileCenterX - (y - InitialTileCenterY);
+              DrawCircle(buffer, CorrectedX, y, 10, 0xffcccccc, 0xffcccccc);
+              DrawLine(buffer, InitialTileCenterX, InitialTileCenterY, CorrectedX, y,  (y - InitialTileCenterY)/(CorrectedX - InitialTileCenterX), 0xffcccccc, 0xffcccccc);
+            }           
+          }
         }
       }
 
