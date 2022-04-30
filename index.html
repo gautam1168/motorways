@@ -289,7 +289,16 @@
           let Col = MinX, Row = MinY;
           let YLow = Math.min(MinY, MaxY);
           let YHigh = Math.max(MinY, MaxY);
-          while (Col <= MaxX) {
+          let ColIncrement = 1;
+          if (MinX > MaxX && Slope > 0 && MinY > MaxY) {
+            Slope = -1 * Slope;
+            ColIncrement = -1;
+          }
+          if (MinX > MaxX && MinY < MaxY && Slope < 0) {
+            Slope = -1 * Slope;
+            ColIncrement = -1;
+          }
+          while (Col != MaxX) {
             Row = Row + Slope;
             for (let i = -13; i <= 13; i++) {
               if (Row + i <= YHigh && Row + i >= YLow) {
@@ -301,7 +310,10 @@
                 }
               }
             }
-            Col++;
+            Col += ColIncrement;
+            if (Col > 2000 || Col < 0) {
+              break;
+            }
           }
         }
       }
