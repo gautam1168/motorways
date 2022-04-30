@@ -25,14 +25,14 @@
       // graph
       const nodesLayout = new Array(maxTileY).fill(0).map(it => new Array(maxTileX).fill(0));
 
-      nodesLayout[0][0] = "A";
-      nodesLayout[1][1] = "B";
+      // nodesLayout[0][0] = "A";
+      // nodesLayout[1][1] = "B";
       // nodesLayout[3][3] = "C";
       // nodesLayout[3][4] = "D";
       // nodesLayout[4][3] = "E";
 
       const edges = {
-        A: ["B"],
+        // A: ["B"],
         // C: ["D", "E"]
       };
 
@@ -238,19 +238,18 @@
             }
           }
         } else {
-          const length = Math.sqrt((MinX - MaxX) ** 2 + (MinY - MaxY) ** 2);
           let Col = MinX, Row = MinY;
           while (Col <= MaxX) {
             Row = Row + Slope;
             for (let i = -13; i <= 13; i++) {
-              if (Row + i <= MaxY && Row + i >= MinY) {
+              // if (Row + i <= MaxY && Row + i >= MinY) {
                 const pixelIndex = (Row + i) * canvas.width + Col;
                 if (i < -10 || i > 10) {
                   buffer[pixelIndex] = BorderColor;
                 } else {
                   buffer[pixelIndex] = FillColor;
                 }
-              }
+              // }
             }
             Col++;
           }
@@ -269,13 +268,19 @@
         if (Slope === 0) {
           MinY = Math.floor((TileStartY + 0.5) * TileSideY - 10);
           MaxY = Math.floor((TileStartY + 0.5) * TileSideY + 10);
+          DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, 0xff000000, 0xff00ff00);
         } else if (Slope === Infinity || Slope === -Infinity) {                                             
           MinX = Math.floor((TileStartX + 0.5) * TileSideX - 10);
           MaxX = Math.floor((TileStartX + 0.5) * TileSideX + 10);
+          DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, 0xff000000, 0xff00ff00);
         } else {
+          MinX = (TileStartX + 0.5) * TileSideX;
+          MinY = (TileStartY + 0.5) * TileSideY; 
+          MaxX = (TileEndX + 0.5) * TileSideX;
+          MaxY = (TileEndY + 0.5) * TileSideY; 
 
+          DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, 0xff000000, 0xff00ff00);
         }
-        DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, 0xff000000, 0xff00ff00);
       }
 
       function DrawTile(buffer, TileX, TileY, Color) {
