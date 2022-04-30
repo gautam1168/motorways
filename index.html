@@ -25,19 +25,20 @@
       // graph
       const nodesLayout = new Array(maxTileY).fill(0).map(it => new Array(maxTileX).fill(0));
 
-      nodesLayout[0][0] = "A";
-      nodesLayout[0][1] = "B";
-      nodesLayout[1][3] = "C";
-      nodesLayout[2][3] = "D";
+      // nodesLayout[0][0] = "A";
+      // nodesLayout[0][1] = "B";
+      // nodesLayout[1][3] = "C";
+      // nodesLayout[2][3] = "D";
 
       const edges = {
-        A: ["B"],
-        C: ["D"]
+        // A: ["B"],
+        // C: ["D"]
       };
 
       let x = 0, y = 0;
       let mouseIsDown = false;
       let mouseDownAtX = 0, mouseDownAtY = 0;
+      let maxNode = "D";
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const buffer = new Uint32Array(imageData.data.buffer);
@@ -95,19 +96,28 @@
         const InitialTileCenterY = Math.floor((InitialTileY + 0.5) * TileSideY);
 
         const CurrentTileCenterX = Math.floor((CurrentTileX + 0.5) * TileSideX);
+        const CurrentTileCenterY = Math.floor((CurrentTileY + 0.5) * TileSideY);
 
-        if (InitialTileX < CurrentTileX && x >= CurrentTileCenterX) {
+        if (
+          (InitialTileX < CurrentTileX && x >= CurrentTileCenterX) || 
+          (InitialTileX > CurrentTileX && x <= CurrentTileCenterX) ||
+          (InitialTileY < CurrentTileY && y >= CurrentTileCenterY) || 
+          (InitialTileY > CurrentTileY && y <= CurrentTileCenterY)
+        ) {
           // Line to right
+          const NextNode1 = String.fromCharCode(maxNode.charCodeAt(0) + 1);
+          const NextNode2 = String.fromCharCode(NextNode1.charCodeAt(0) + 1);
           if (!nodesLayout[InitialTileY][InitialTileX]) {
-            nodesLayout[InitialTileY][InitialTileX] = "E";
+            nodesLayout[InitialTileY][InitialTileX] = NextNode1;
           }
           if (!nodesLayout[CurrentTileY][CurrentTileX]) {
-            nodesLayout[CurrentTileY][CurrentTileX] = "F";
+            nodesLayout[CurrentTileY][CurrentTileX] = NextNode2;
+            if (!edges[NextNode1] || !edges[NextNode1].includes(NextNode2)) {
+              edges[NextNode1] = [NextNode2]
+              maxNode = NextNode2;
+            }
           }
-          if (!edges["E"] || !edges["E"].includes("F")) {
-            edges["E"] = ["F"]
-          }
-        }
+        } 
       }
 
       function DrawHoveredTile(x, y) {
