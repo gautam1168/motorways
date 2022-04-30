@@ -106,16 +106,32 @@
           (InitialTileY > CurrentTileY && y <= CurrentTileCenterY)
         ) {
           // Line to right
-          const NextNode1 = String.fromCharCode(maxNode.charCodeAt(0) + 1);
-          const NextNode2 = String.fromCharCode(NextNode1.charCodeAt(0) + 1);
+          let NextNode1 = null;
           if (!nodesLayout[InitialTileY][InitialTileX]) {
+            NextNode1 = String.fromCharCode(maxNode.charCodeAt(0) + 1);
             nodesLayout[InitialTileY][InitialTileX] = NextNode1;
-          }
+          } 
           if (!nodesLayout[CurrentTileY][CurrentTileX]) {
+            let NextNode2 = null;
+            if (NextNode1) {
+              NextNode2 = String.fromCharCode(NextNode1.charCodeAt(0) + 1);
+            } else {
+              NextNode2 = String.fromCharCode(maxNode.charCodeAt(0) + 1); 
+            }
+            
             nodesLayout[CurrentTileY][CurrentTileX] = NextNode2;
-            if (!edges[NextNode1] || !edges[NextNode1].includes(NextNode2)) {
-              edges[NextNode1] = [NextNode2]
+            NextNode1 = nodesLayout[InitialTileY][InitialTileX];
+
+            if (edges[NextNode1] && edges[NextNode1].includes(NextNode2)) {
+              // Edge already exists
+            } else if (edges[NextNode2] && edges[NextNode2].includes[NextNode1]) {
+              // Edge already exists
+            } else {
+              edges[NextNode1] = edges[NextNode1] || [];
+              edges[NextNode1] = edges[NextNode1].concat(NextNode2);
               maxNode = NextNode2;
+              mouseDownAtX = CurrentTileCenterX;
+              mouseDownAtY = CurrentTileCenterY;
             }
           }
         } 
