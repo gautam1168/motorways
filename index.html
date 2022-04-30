@@ -153,7 +153,7 @@
             DrawCircle(buffer, InitialTileCenterX, InitialTileCenterY, 10, 0xffcccccc, 0xffcccccc);
             DrawCircle(buffer, InitialTileCenterX, y, 10, 0xffcccccc, 0xffcccccc);
             DrawLine(buffer, InitialTileCenterX - 10, y, InitialTileCenterX + 10, InitialTileCenterY,  -Infinity, 0xffcccccc, 0xffcccccc);
-          }
+          } 
         }
       }
 
@@ -208,7 +208,6 @@
                   RowEnd = Row + 1;
                 }
 
-                
                 DrawCircleAtTile(buffer, Col, Row, 10, 0xff000000, 0xff00ff00);
                 DrawCircleAtTile(buffer, ColEnd, RowEnd, 10, 0xff000000, 0xff00ff00);
                 DrawLineBetweenTiles(buffer, Col, Row, ColEnd, RowEnd);
@@ -219,29 +218,47 @@
       }
 
       function DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, FillColor, BorderColor) {
-        let LineIsHorizontal = Slope === 0;
-        for (let Row = MinY; Row <= MaxY; Row++) {
-          for (let Col = MinX; Col <= MaxX; Col++) {
-            const pixelIndex = Row * canvas.width + Col;
-            if (LineIsHorizontal) {
-              if ((Row < MinY + 0.1 * (MaxY - MinY)) || (Row > MinY + 0.9 * (MaxY - MinY))) {
-                buffer[pixelIndex] = BorderColor;
-              } else {
-                buffer[pixelIndex] = FillColor;
-              }
-            } else {
-              if ((Col < MinX + 0.1 * (MaxX - MinX)) || (Col > MinX + 0.9 * (MaxX - MinX))) {
-                buffer[pixelIndex] = BorderColor;
-              } else {
-                buffer[pixelIndex] = FillColor;
+        if (Slope === 0 || Slope === Infinity || Slope === -Infinity) {
+          for (let Row = MinY; Row <= MaxY; Row++) {
+            for (let Col = MinX; Col <= MaxX; Col++) {
+              const pixelIndex = Row * canvas.width + Col;
+              if (Slope === 0) {
+                if ((Row < MinY + 0.1 * (MaxY - MinY)) || (Row > MinY + 0.9 * (MaxY - MinY))) {
+                  buffer[pixelIndex] = BorderColor;
+                } else {
+                  buffer[pixelIndex] = FillColor;
+                }
+              } else if (Slope === Infinity || Slope === -Infinity) {
+                if ((Col < MinX + 0.1 * (MaxX - MinX)) || (Col > MinX + 0.9 * (MaxX - MinX))) {
+                  buffer[pixelIndex] = BorderColor;
+                } else {
+                  buffer[pixelIndex] = FillColor;
+                }
+              } 
+            }
+          }
+        } else {
+          const length = Math.sqrt((MinX - MaxX) ** 2 + (MinY - MaxY) ** 2);
+          let Col = MinX, Row = MinY;
+          while (Col <= MaxX) {
+            Row = Row + Slope;
+            for (let i = -13; i <= 13; i++) {
+              if (Row + i <= MaxY && Row + i >= MinY) {
+                const pixelIndex = (Row + i) * canvas.width + Col;
+                if (i < -10 || i > 10) {
+                  buffer[pixelIndex] = BorderColor;
+                } else {
+                  buffer[pixelIndex] = FillColor;
+                }
               }
             }
+            Col++;
           }
         }
       }
 
       function DrawLineBetweenTiles(buffer, TileStartX, TileStartY, TileEndX, TileEndY) {
-        let LineIsHorizontal = TileStartX != TileEndX;
+        const Slope = (TileEndY - TileStartY) / (TileEndX - TileStartX);
 
         let MinX = Math.floor(TileSideX * 0.5 * (TileStartX + TileEndX));
         let MaxX = Math.floor(MinX + TileSideX);
@@ -249,14 +266,16 @@
         let MinY = Math.floor(TileSideY * 0.5 * (TileStartY + TileEndY));
         let MaxY = Math.floor(MinY + TileSideY);
 
-        if (LineIsHorizontal) {
+        if (Slope === 0) {
           MinY = Math.floor((TileStartY + 0.5) * TileSideY - 10);
           MaxY = Math.floor((TileStartY + 0.5) * TileSideY + 10);
-        } else {                                             
+        } else if (Slope === Infinity || Slope === -Infinity) {                                             
           MinX = Math.floor((TileStartX + 0.5) * TileSideX - 10);
           MaxX = Math.floor((TileStartX + 0.5) * TileSideX + 10);
+        } else {
+
         }
-        DrawLine(buffer, MinX, MinY, MaxX, MaxY, (TileEndY - TileStartY) / (TileEndX - TileStartX), 0xff000000, 0xff00ff00);
+        DrawLine(buffer, MinX, MinY, MaxX, MaxY, Slope, 0xff000000, 0xff00ff00);
       }
 
       function DrawTile(buffer, TileX, TileY, Color) {
