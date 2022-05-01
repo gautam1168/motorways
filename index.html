@@ -35,7 +35,10 @@
         // A: ["B"],
         // C: ["D", "E"]
       };
+      // Maximum label of nodes
+      let maxNode = "A";
 
+      // Sources/Destinations x-coord, y-coord, type
       const sourceNodes = [
         [0, 0, 0]
       ];
@@ -43,13 +46,27 @@
         [4, 5, 0]
       ];
 
+      // Cars
+      const cars = [
+        {
+          TileX: 0,
+          TileY: 0,
+          TileCovered: 0.5,
+          Speed: 1,
+          Type: 0,
+          Direction: "Up"
+        }
+      ]
+
+      // Mouse location
       let x = 0, y = 0;
       let mouseIsDown = false;
       let mouseDownAtX = 0, mouseDownAtY = 0;
-      let maxNode = "E";
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const buffer = new Uint32Array(imageData.data.buffer);
+
+      let t0, t1;
 
       renderLoop();
 
@@ -69,14 +86,18 @@
       });
 
       function renderLoop() {
-        requestAnimationFrame(() => {
+        // t0 = performance.now();
+        setTimeout(() => {
           DrawFrame(edges, nodesLayout);
           renderLoop();
-        })
+          // t1 = performance.now();
+          // const timeForFrame = t1 - t0;
+          // console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+        }, 33);
       }
 
       function DrawFrame(edges, nodesLayout) {
-        const t0 = performance.now();
+        // const t0 = performance.now();
         // White out
         for (let i = 0; i < buffer.length; i++) {
           buffer[i] = 0xffffffff;
@@ -88,15 +109,43 @@
           DrawHoveredTile(x, y);
           AddNodeToGraph(x, y);
         }
+        DrawCars(cars);
 
         ctx.putImageData(imageData, 0, 0);
-        const t1 = performance.now();
-        const timeForFrame = Math.floor(t1 - t0);
-        console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+        // const t1 = performance.now();
+        // const timeForFrame = Math.floor(t1 - t0);
+        // console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+      }
+
+      function DrawCars(cars) {
+        cars.forEach(car => {
+          const dtForFrame = 0.01;
+          car.TileCovered += dtForFrame;
+          ReCanonicalizeCarCoords(car);
+
+          const X = Math.floor((car.TileX + car.TileCovered) * TileSideX);
+          const Y = Math.floor((car.TileY + car.TileCovered) * TileSideY);
+
+          DrawCircle(buffer, X, Y, 5, 0xff0000ff, 0xff000000);
+        });
+      }
+
+      function ReCanonicalizeCarCoords(car) {
+        if (car.TileCovered >= 1) {
+          const percentageExceeded = car.TileCovered - 1;
+          car.TileX += 1;
+          car.TileY += 1;
+          car.TileCovered = percentageExceeded;
+        }
       }
 
       function DrawLocations(sourceNodes, destNodes) {
-        for (let item of sourceNodes.concat(destNodes)) {
+        for (let item of sourceNodes) {
+          let [TileX, TileY, Color] = item;
+          DrawTileBox(buffer, TileX, TileY, Color === 0 ? 0xff00ff00 : 0xff000000);
+        }
+
+        for (let item of destNodes) {
           let [TileX, TileY, Color] = item;
           DrawTile(buffer, TileX, TileY, Color === 0 ? 0xff00ff00 : 0xff000000);
         }
