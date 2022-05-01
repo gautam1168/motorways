@@ -207,15 +207,19 @@
           if (car.TileCoveredX >= 1 ) {
             car.CurrentNode = NextNode;
             car.TileCoveredX = 0;
+            car.TileCoveredY = 0.5;
           } else if (car.TileCoveredY >= 1) {
             car.CurrentNode = NextNode;
             car.TileCoveredY = 0;
+            car.TileCoveredX = 0.5;
           } else if (car.TileCoveredX < 0) {
             car.CurrentNode = NextNode;
-            car.TileCoveredX = 0.99999;
+            car.TileCoveredX = 0;
+            car.TileCoveredY = 0.5;
           } else if (car.TileCoveredY < 0) {
             car.CurrentNode = NextNode;
-            car.TileCoveredY = 0.99999;
+            car.TileCoveredY = 0;
+            car.TileCoveredX = 0.5;
           }
         }
       }
