@@ -53,9 +53,9 @@
       // Cars
       const cars = [
         {
-          TileX: 0,
-          TileY: 0,
-          TileCovered: 0.5,
+          CurrentNode: null,
+          TileCoveredX: 0.5,
+          TileCoveredY: 0.5,
           Speed: 1,
           Type: 0,
           Direction: "Up",
@@ -114,10 +114,10 @@
           Path.push(source);
           source = edges[source][0];
         }
-        if (!edges[source] === dest) {
-          Path = [];
-        } else {
+        if (edges[source] && edges[source][0] === dest) {
           Path.push(dest)
+        } else if (dest !== source) {
+          Path = [];
         }
         return Path;
       }
@@ -145,24 +145,78 @@
 
       function DrawCars(cars) {
         cars.forEach(car => {
-          // Move car
-          const dtForFrame = 0.01;
-          car.TileCovered += dtForFrame;
-          ReCanonicalizeCarCoords(car);
+          if (car.CurrentNode === null) {
+            const [TileX, TileY] = sourceNodes[car.Source];
+            const sourceNodeLabel = nodesLayout[TileY][TileX];
+            if (sourceNodeLabel) {
+              car.CurrentNode = sourceNodeLabel;
+            }
+          }
+          let [TileX, TileY] = sourceNodes[car.Source];
+          if (car.Path.length !== 0) {
+            [TileX, TileY] = lookupTable[car.CurrentNode];
+            MoveCar(car);
 
-          const X = Math.floor((car.TileX + car.TileCovered) * TileSideX);
-          const Y = Math.floor((car.TileY + car.TileCovered) * TileSideY);
+            const X = Math.floor((TileX + car.TileCoveredX) * TileSideX);
+            const Y = Math.floor((TileY + car.TileCoveredY) * TileSideY);
 
-          DrawCircle(buffer, X, Y, 5, 0xff0000ff, 0xff000000);
+            DrawCircle(buffer, X, Y, 5, 0xff0000ff, 0xff000000);
+          } else {
+            const X = Math.floor((TileX + car.TileCoveredX) * TileSideX);
+            const Y = Math.floor((TileY + car.TileCoveredY) * TileSideY);
+            DrawCircle(buffer, X, Y, 5, 0xff0000ff, 0xff000000);
+          }
         });
       }
 
-      function ReCanonicalizeCarCoords(car) {
-        if (car.TileCovered >= 1) {
-          const percentageExceeded = car.TileCovered - 1;
-          car.TileX += 1;
-          car.TileY += 1;
-          car.TileCovered = percentageExceeded;
+      function MoveCar(car) {
+        // {
+        //   CurrentNode: null,
+        //   TileCovered: 0.5,
+        //   Speed: 1,
+        //   Type: 0,
+        //   Direction: "Up",
+        //   Source: 0,
+        //   Dest: 0,
+        //   Path: []
+        // }
+        let NextNode = car.CurrentNode;
+        for (let i = 0; i < car.Path.length - 1; i++) {
+          if (car.Path[i] === car.CurrentNode) {
+            NextNode = car.Path[i + 1];
+            break;
+          }
+        }
+        if (NextNode !== car.CurrentNode) {
+          // Detect movement direction delta
+          const [InitialTileX, InitialTileY] = lookupTable[car.CurrentNode];
+          const [FinalTileX, FinalTileY] = lookupTable[NextNode];
+
+          const Dx = FinalTileX - InitialTileX;
+          const Dy = FinalTileY - InitialTileY;
+
+          const dtForFrame = 0.01;
+          // Add movement
+          if (Dx !== 0) {
+            car.TileCoveredX += Math.sign(Dx) * dtForFrame;
+          }
+          if (Dy !== 0) {
+            car.TileCoveredY += Math.sign(Dy) * dtForFrame;
+          }
+          // Reset tile if needed
+          if (car.TileCoveredX >= 1 ) {
+            car.CurrentNode = NextNode;
+            car.TileCoveredX = 0;
+          } else if (car.TileCoveredY >= 1) {
+            car.CurrentNode = NextNode;
+            car.TileCoveredY = 0;
+          } else if (car.TileCoveredX < 0) {
+            car.CurrentNode = NextNode;
+            car.TileCoveredX = 0.99999;
+          } else if (car.TileCoveredY < 0) {
+            car.CurrentNode = NextNode;
+            car.TileCoveredY = 0.99999;
+          }
         }
       }
 
