@@ -154,8 +154,8 @@
           }
           let [TileX, TileY] = sourceNodes[car.Source];
           if (car.Path.length !== 0) {
-            [TileX, TileY] = lookupTable[car.CurrentNode];
             MoveCar(car);
+            [TileX, TileY] = lookupTable[car.CurrentNode];
 
             const X = Math.floor((TileX + car.TileCoveredX) * TileSideX);
             const Y = Math.floor((TileY + car.TileCoveredY) * TileSideY);
@@ -187,7 +187,7 @@
             break;
           }
         }
-        if (NextNode !== car.CurrentNode) {
+        if (NextNode) {
           // Detect movement direction delta
           const [InitialTileX, InitialTileY] = lookupTable[car.CurrentNode];
           const [FinalTileX, FinalTileY] = lookupTable[NextNode];
