@@ -86,18 +86,14 @@
       });
 
       function renderLoop() {
-        // t0 = performance.now();
         setTimeout(() => {
           DrawFrame(edges, nodesLayout);
           renderLoop();
-          // t1 = performance.now();
-          // const timeForFrame = t1 - t0;
-          // console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
         }, 33);
       }
 
       function DrawFrame(edges, nodesLayout) {
-        // const t0 = performance.now();
+        const t0 = performance.now();
         // White out
         for (let i = 0; i < buffer.length; i++) {
           buffer[i] = 0xffffffff;
@@ -112,13 +108,14 @@
         DrawCars(cars);
 
         ctx.putImageData(imageData, 0, 0);
-        // const t1 = performance.now();
-        // const timeForFrame = Math.floor(t1 - t0);
-        // console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+        const t1 = performance.now();
+        const timeForFrame = Math.floor(t1 - t0);
+        console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
       }
 
       function DrawCars(cars) {
         cars.forEach(car => {
+          // Move car
           const dtForFrame = 0.01;
           car.TileCovered += dtForFrame;
           ReCanonicalizeCarCoords(car);
