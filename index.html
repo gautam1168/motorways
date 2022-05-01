@@ -35,8 +35,12 @@
         // A: ["B"],
         // C: ["D", "E"]
       };
+      
       // Maximum label of nodes
       let maxNode = "A";
+
+      // Reverse location lookup
+      const lookupTable = {};
 
       // Sources/Destinations x-coord, y-coord, type
       const sourceNodes = [
@@ -54,7 +58,10 @@
           TileCovered: 0.5,
           Speed: 1,
           Type: 0,
-          Direction: "Up"
+          Direction: "Up",
+          Source: 0,
+          Dest: 0,
+          Path: []
         }
       ]
 
@@ -92,8 +99,31 @@
         }, 33);
       }
 
+      function CalculatePath(car) {
+        const source = sourceNodes[car.Source];
+        const destination = destNodes[car.Dest];
+
+        const sourceLabel = nodesLayout[source[1]][source[0]];
+        const destLabel = nodesLayout[destination[1]][destination[0]];
+        car.Path = FindPathInGraph(edges, sourceLabel, destLabel);
+      }
+
+      function FindPathInGraph(edges, source, dest) {
+        let Path = [];
+        while (edges[source] && edges[source] !== dest) {
+          Path.push(source);
+          source = edges[source][0];
+        }
+        if (!edges[source] === dest) {
+          Path = [];
+        } else {
+          Path.push(dest)
+        }
+        return Path;
+      }
+
       function DrawFrame(edges, nodesLayout) {
-        const t0 = performance.now();
+        // const t0 = performance.now();
         // White out
         for (let i = 0; i < buffer.length; i++) {
           buffer[i] = 0xffffffff;
@@ -108,9 +138,9 @@
         DrawCars(cars);
 
         ctx.putImageData(imageData, 0, 0);
-        const t1 = performance.now();
-        const timeForFrame = Math.floor(t1 - t0);
-        console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
+        // const t1 = performance.now();
+        // const timeForFrame = Math.floor(t1 - t0);
+        // console.log(`${timeForFrame}ms/frame, ${Math.floor(1000/timeForFrame)}frames/sec`);
       }
 
       function DrawCars(cars) {
@@ -190,9 +220,22 @@
             } else {
               edges[NextNode1] = edges[NextNode1] || [];
               edges[NextNode1] = edges[NextNode1].concat(NextNode2);
+
+              if (!lookupTable[NextNode1]) {
+                lookupTable[NextNode1] = [InitialTileX, InitialTileY];
+              }
+
+              if (!lookupTable[NextNode2]) {
+                lookupTable[NextNode2] = [CurrentTileX, CurrentTileY];
+              }
+
               maxNode = NextNode2;
               mouseDownAtX = CurrentTileCenterX;
               mouseDownAtY = CurrentTileCenterY;
+
+              for (let car of cars) {
+                CalculatePath(car);
+              }
             }
           }
         } 
