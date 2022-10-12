@@ -461,7 +461,7 @@ internal void
 DrawHouses(game_state *GameState) 
 {
   for (uint32 HouseIndex = 0;
-      HouseIndex < GameState->MaxNumHouses;
+      HouseIndex < GameState->NumHouses;
       ++HouseIndex)
   {
     house *House = GameState->Houses + HouseIndex;
@@ -498,6 +498,109 @@ DrawCars(game_state *GameState)
   }
 }
 
+internal void
+MoveCars(game_state *GameState)
+{
+  for (uint32 CarIndex = 0;
+      CarIndex < GameState->NumCars;
+      ++CarIndex)
+  {
+    car *Car = GameState->Cars + CarIndex;
+  // Find current road node of car
+    road_node *RoadNode = Car->Path[Car->CurrentPathNodeIndex];
+  // Find the cell its going to and determine whether to add x or y offset
+    road_node *HeadedTo = 0;
+    if (Car->CurrentPathNodeIndex + 1 < Car->NumNodesInPath)
+    {
+      HeadedTo = Car->Path[Car->CurrentPathNodeIndex + 1];;
+      // Update the offset
+      if (HeadedTo->XCellIndex > RoadNode->XCellIndex)
+      {
+        if (Car->OffsetY < 0.25f * GameState->CellSideInPixels)
+        {
+          Car->OffsetY += GameState->DtForFrame * Car->Speed;
+        }
+        else if (Car->OffsetY > 0.60 * GameState->CellSideInPixels)
+        {
+          Car->OffsetY -= GameState->DtForFrame * Car->Speed;
+        }
+        else 
+        {
+          Car->OffsetX +=  GameState->DtForFrame * Car->Speed; 
+        }
+      } 
+      else if (HeadedTo->XCellIndex < RoadNode->XCellIndex)
+      {
+        if (Car->OffsetY < 0.25f * GameState->CellSideInPixels)
+        {
+          Car->OffsetY += GameState->DtForFrame * Car->Speed;
+        }
+        else if (Car->OffsetY > 0.60 * GameState->CellSideInPixels)
+        {
+          Car->OffsetY -= GameState->DtForFrame * Car->Speed;
+        }
+        else
+        {
+          Car->OffsetX -= GameState->DtForFrame * Car->Speed;
+        }
+      }
+      else if (HeadedTo->YCellIndex > RoadNode->YCellIndex)
+      {
+        if (Car->OffsetX < 0.25f * GameState->CellSideInPixels)
+        {
+          Car->OffsetX += GameState->DtForFrame * Car->Speed;
+        }
+        else if (Car->OffsetX > 0.60 * GameState->CellSideInPixels)
+        {
+          Car->OffsetX -= GameState->DtForFrame * Car->Speed;
+        }
+        else
+        {
+          Car->OffsetX += GameState->DtForFrame * Car->Speed;
+        }
+      }
+      else if (HeadedTo->YCellIndex < RoadNode->YCellIndex)
+      {
+        if (Car->OffsetX < 0.25f * GameState->CellSideInPixels)
+        {
+          Car->OffsetX += GameState->DtForFrame * Car->Speed;
+        }
+        else if (Car->OffsetX > 0.60 * GameState->CellSideInPixels)
+        {
+          Car->OffsetX -= GameState->DtForFrame * Car->Speed;
+        }
+        else
+        {
+          Car->OffsetY -= GameState->DtForFrame * Car->Speed;
+        }
+      }
+
+      // Renormalize offset and currentpathnode
+      if (Car->OffsetX >= GameState->CellSideInPixels)
+      {
+        Car->OffsetX = 0;
+        Car->CurrentPathNodeIndex += 1;
+      } 
+      else if (Car->OffsetX < 0)
+      {
+        Car->OffsetX = GameState->CellSideInPixels - 1;
+        Car->CurrentPathNodeIndex += 1;
+      }
+
+      if (Car->OffsetY >= GameState->CellSideInPixels)
+      {
+        Car->OffsetY = 0;
+        Car->CurrentPathNodeIndex += 1;
+      } 
+      else if (Car->OffsetY < 0)
+      {
+        Car->OffsetY = GameState->CellSideInPixels - 1;
+        Car->CurrentPathNodeIndex += 1;
+      }
+    }
+  }
+}
+
 extern "C" void
 UpdateAndRender(uint8 *BufferMemory, 
     uint16 ImageWidth, uint16 ImageHeight, 
@@ -514,6 +617,7 @@ UpdateAndRender(uint8 *BufferMemory,
     GameState.CellBorderColor = Color(0xcc, 0xcc, 0xcc, 0xff);
     GameState.CellBorderWidth = 1;
     GameState.CellSideInPixels = 64;
+    GameState.DtForFrame = 1.0f;
 
     GameState.BuildingBitmap = BufferMemory + (Width * Height * 4);
     GameState.HouseBitmap = GameState.BuildingBitmap + (ImageWidth * ImageHeight * 4);
@@ -595,7 +699,7 @@ UpdateAndRender(uint8 *BufferMemory,
     Car->Destination = GameState.RoadNodes + 0;
     Car->NumNodesInPath = 6;
     Car->CurrentPathNodeIndex = 0;
-    Car->Speed = 2.0f;
+    Car->Speed = 1.0f;
     Car->OffsetX = 0.28f * GameState.CellSideInPixels;
     Car->OffsetY = 0.1f * GameState.CellSideInPixels;
     GameState.NumCars = 1;
@@ -618,13 +722,16 @@ UpdateAndRender(uint8 *BufferMemory,
     House->Height = HouseHeight;
     House->CellIndexX = 5;
     House->CellIndexY = 5;
+    GameState.NumHouses = 1;
 
+    /*
     House++;
     House->Pixels = (pixel *)GameState.HouseBitmap;
     House->Width = HouseWidth;
     House->Height = HouseHeight;
     House->CellIndexX = 5;
     House->CellIndexY = 6;
+    */
 
     GameState.Buffer.Pixels = (pixel *)BufferMemory;
     GameState.Buffer.Width = Width;
@@ -636,6 +743,7 @@ UpdateAndRender(uint8 *BufferMemory,
   FillColor(&GameState, 0, 0, Width, Height, 
       GameState.BackgroundColor);
 
+  MoveCars(&GameState);
   if (MouseDown)
   {
     DrawGrid(&GameState);

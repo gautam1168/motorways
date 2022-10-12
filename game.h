@@ -61,8 +61,8 @@ struct car
   uint32 NumNodesInPath;
   float Speed;
   car_facing_direction FacingDirection;
-  uint16 OffsetX;
-  uint16 OffsetY;
+  int16 OffsetX;
+  int16 OffsetY;
   uint32 CurrentPathNodeIndex;
 };
 
@@ -106,6 +106,7 @@ struct game_state
   bool MouseIsDown;
   uint8 MouseDownCellIndexX;
   uint8 MouseDownCellIndexY; 
+  float DtForFrame;
 
   uint8 *HouseBitmap;
   uint8 *CarBitmap;
