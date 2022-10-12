@@ -224,6 +224,14 @@ DrawImage(game_state *GameState, pixel *ImageBuffer, uint16 ImageWidth,
 internal void
 DrawRoads(game_state *GameState) 
 {
+  for (uint32 RoadNodeIndex = 0;
+      RoadNodeIndex < GameState->NumRoadNodes;
+      ++RoadNodeIndex)
+  {
+    road_node *RoadNode = GameState->RoadNodes + RoadNodeIndex;
+    RoadNode->Visited = false;
+  }
+
   for (uint8 RoadIndex = 0;
       RoadIndex < GameState->NumRoads;
       ++RoadIndex)
@@ -318,13 +326,7 @@ DrawRoads(game_state *GameState)
       }
     }
 
-    for (uint32 RoadNodeIndex = 0;
-          RoadNodeIndex < GameState->NumRoadNodes;
-          ++RoadNodeIndex)
-    {
-      road_node *RoadNode = GameState->RoadNodes + RoadNodeIndex;
-      RoadNode->Visited = false;
-    }
+
   }
 }
 
@@ -482,6 +484,20 @@ DrawBuildings(game_state *GameState)
 
 }
 
+internal void
+DrawCars(game_state *GameState)
+{
+  for (uint32 CarIndex = 0;
+     CarIndex < GameState->NumCars;
+     ++CarIndex)
+  {
+    car *Car = GameState->Cars + CarIndex;
+    road_node *CarsRoadNode = Car->Path[Car->CurrentPathNodeIndex];
+    DrawImage(GameState, Car->Pixels, Car->Width, Car->Height, GameState->Buffer.Width, 
+        CarsRoadNode->XCellIndex, CarsRoadNode->YCellIndex, Car->OffsetX, Car->OffsetY);
+  }
+}
+
 extern "C" void
 UpdateAndRender(uint8 *BufferMemory, 
     uint16 ImageWidth, uint16 ImageHeight, 
@@ -530,8 +546,33 @@ UpdateAndRender(uint8 *BufferMemory,
     Node = GameState.RoadNodes + 2;
     Node->XCellIndex = 4;
     Node->YCellIndex = 3;
+    Node->Next[0] = GameState.RoadNodes + 3;
+    Node->NumNeighbours = 1;
+    Node->Visited = false;
+
+    Node = GameState.RoadNodes + 3;
+    Node->XCellIndex = 5;
+    Node->YCellIndex = 3;
+    // TODO(gaurav): Adding number of neighbours should be a part of adding a reference
+    Node->Next[0] = GameState.RoadNodes + 4;
+    Node->NumNeighbours = 1;
+    Node->Visited = false;
+
+    Node = GameState.RoadNodes + 4;
+    Node->XCellIndex = 5;
+    Node->YCellIndex = 4;
+    Node->Next[0] = GameState.RoadNodes + 5;
+    Node->NumNeighbours = 1;
+    Node->Visited = false;
+
+    Node = GameState.RoadNodes + 5;
+    Node->XCellIndex = 5;
+    Node->YCellIndex = 5;
     Node->NumNeighbours = 0;
     Node->Visited = false;
+
+    // TODO(gaurav): Make this a part of adding a node
+    GameState.NumRoadNodes = 6;
 
     GameState.MaxNumRoads = 5;
     GameState.UnConnectedRoads = PushArray(&GameState.Arena, GameState.MaxNumRoads, road_node *);
@@ -544,6 +585,21 @@ UpdateAndRender(uint8 *BufferMemory,
     Car->Pixels = (pixel *)GameState.CarBitmap;
     Car->Width = CarWidth;
     Car->Height = CarHeight;
+    Car->Path = PushArray(&GameState.Arena, 6, road_node *);
+    Car->Path[0] = GameState.RoadNodes + 5;
+    Car->Path[1] = GameState.RoadNodes + 4;
+    Car->Path[2] = GameState.RoadNodes + 3;
+    Car->Path[3] = GameState.RoadNodes + 2;
+    Car->Path[4] = GameState.RoadNodes + 1;
+    Car->Path[5] = GameState.RoadNodes + 0;
+    Car->Destination = GameState.RoadNodes + 0;
+    Car->NumNodesInPath = 6;
+    Car->CurrentPathNodeIndex = 0;
+    Car->Speed = 2.0f;
+    Car->OffsetX = 0.28f * GameState.CellSideInPixels;
+    Car->OffsetY = 0.1f * GameState.CellSideInPixels;
+    GameState.NumCars = 1;
+
 
     GameState.MaxNumBuildings = 2;
     GameState.Buildings = PushArray(&GameState.Arena, GameState.MaxNumBuildings, building);
@@ -589,10 +645,9 @@ UpdateAndRender(uint8 *BufferMemory,
 
   DrawBuildings(&GameState);
 
+  DrawCars(&GameState);
   DrawHouses(&GameState);
 
-  uint8 *CarBuffer = BufferMemory + (Width * Height * 4) + (ImageWidth * ImageHeight * 4) + (HouseWidth * HouseHeight * 4);
-  DrawImage(&GameState, (pixel *)CarBuffer, CarWidth, CarHeight, Width, 5, 4, 20, 20);
 
   if (MouseDown)
   {
