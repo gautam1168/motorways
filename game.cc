@@ -194,11 +194,11 @@ DrawGrid(game_state *GameState)
 }
 
 internal void
-DrawImage(game_state *GameState, uint8 *ImageBuffer, uint16 ImageWidth, 
+DrawImage(game_state *GameState, pixel *ImageBuffer, uint16 ImageWidth, 
     uint16 ImageHeight, uint16 BufferWidth, uint16 CellIndexX, 
     uint16 CellIndexY, uint16 OffsetX = 0, uint16 OffsetY = 0)
 {
-  pixel *SourcePixel = (pixel *)ImageBuffer;
+  pixel *SourcePixel = ImageBuffer;
   uint16 CellSideInPixels = GameState->CellSideInPixels;
 
   for (uint16 YIndex = CellIndexY * CellSideInPixels;
@@ -224,10 +224,6 @@ DrawImage(game_state *GameState, uint8 *ImageBuffer, uint16 ImageWidth,
 internal void
 DrawRoads(game_state *GameState) 
 {
-  if (GameState->NumRoads >= 2)
-  {
-    uint8 a = 1;
-  }
   for (uint8 RoadIndex = 0;
       RoadIndex < GameState->NumRoads;
       ++RoadIndex)
@@ -459,6 +455,33 @@ CreateAndInsertNodes(game_state *GameState,
   }
 }
 
+internal void
+DrawHouses(game_state *GameState) 
+{
+  for (uint32 HouseIndex = 0;
+      HouseIndex < GameState->MaxNumHouses;
+      ++HouseIndex)
+  {
+    house *House = GameState->Houses + HouseIndex;
+    DrawImage(GameState, House->Pixels, House->Width, House->Height, GameState->Buffer.Width, 
+        House->CellIndexX, House->CellIndexY);
+  }
+}
+
+internal void
+DrawBuildings(game_state *GameState)
+{
+  for (uint32 BuildingIndex = 0;
+      BuildingIndex < GameState->MaxNumBuildings;
+      ++BuildingIndex)
+  {
+    building *Building = GameState->Buildings + BuildingIndex;
+    DrawImage(GameState, Building->Pixels, Building->Width, Building->Height, GameState->Buffer.Width, 
+        Building->CellIndexX, Building->CellIndexY);
+  }
+
+}
+
 extern "C" void
 UpdateAndRender(uint8 *BufferMemory, 
     uint16 ImageWidth, uint16 ImageHeight, 
@@ -476,6 +499,10 @@ UpdateAndRender(uint8 *BufferMemory,
     GameState.CellBorderWidth = 1;
     GameState.CellSideInPixels = 64;
 
+    GameState.BuildingBitmap = BufferMemory + (Width * Height * 4);
+    GameState.HouseBitmap = GameState.BuildingBitmap + (ImageWidth * ImageHeight * 4);
+    GameState.CarBitmap = GameState.HouseBitmap + (HouseWidth * HouseHeight * 4);
+
     GameState.Arena.Base = BufferMemory 
       + (Width * Height * 4)
       + (ImageWidth * ImageHeight * 4)
@@ -483,76 +510,69 @@ UpdateAndRender(uint8 *BufferMemory,
     GameState.Arena.Used = 0;
     GameState.Arena.Size = 1024 * 1024 * 5; // 5MB
 
-    GameState.MaxNumRoads = 5;
-    GameState.UnConnectedRoads = PushArray(&GameState.Arena, GameState.MaxNumRoads, road_node *);
+
     GameState.MaxNumRoadNodes = 20;
     GameState.RoadNodes = PushArray(&GameState.Arena, GameState.MaxNumRoadNodes, road_node);
+    road_node *Node = GameState.RoadNodes + 0;
+    Node->XCellIndex = 2;
+    Node->YCellIndex = 3;
+    Node->Next[0] = GameState.RoadNodes + 1;
+    Node->NumNeighbours = 1;
+    Node->Visited = false;
+
+    Node = GameState.RoadNodes + 1;
+    Node->XCellIndex = 3;
+    Node->YCellIndex = 3;
+    Node->Next[0] = GameState.RoadNodes + 2;
+    Node->NumNeighbours = 1;
+    Node->Visited = false;
+
+    Node = GameState.RoadNodes + 2;
+    Node->XCellIndex = 4;
+    Node->YCellIndex = 3;
+    Node->NumNeighbours = 0;
+    Node->Visited = false;
+
+    GameState.MaxNumRoads = 5;
+    GameState.UnConnectedRoads = PushArray(&GameState.Arena, GameState.MaxNumRoads, road_node *);
+    GameState.UnConnectedRoads[0] = GameState.RoadNodes + 0;
+    GameState.NumRoads = 1;
+
+    GameState.MaxNumCars = 2;
+    GameState.Cars = PushArray(&GameState.Arena, GameState.MaxNumCars, car);
+    car *Car = GameState.Cars + 0;
+    Car->Pixels = (pixel *)GameState.CarBitmap;
+    Car->Width = CarWidth;
+    Car->Height = CarHeight;
+
+    GameState.MaxNumBuildings = 2;
+    GameState.Buildings = PushArray(&GameState.Arena, GameState.MaxNumBuildings, building);
+    building *Building = GameState.Buildings + 0;
+    Building->Pixels = (pixel *)GameState.BuildingBitmap;
+    Building->Width = ImageWidth;
+    Building->Height = ImageHeight;
+    Building->CellIndexX = 1;
+    Building->CellIndexY = 1;
+
+    GameState.MaxNumHouses = 5;
+    GameState.Houses = PushArray(&GameState.Arena, GameState.MaxNumHouses, house);
+    house *House = GameState.Houses + 0;
+    House->Pixels = (pixel *)GameState.HouseBitmap;
+    House->Width = HouseWidth;
+    House->Height = HouseHeight;
+    House->CellIndexX = 5;
+    House->CellIndexY = 5;
+
+    House++;
+    House->Pixels = (pixel *)GameState.HouseBitmap;
+    House->Width = HouseWidth;
+    House->Height = HouseHeight;
+    House->CellIndexX = 5;
+    House->CellIndexY = 6;
 
     GameState.Buffer.Pixels = (pixel *)BufferMemory;
     GameState.Buffer.Width = Width;
     GameState.Buffer.Height = Height;
-
-    /*
-    road_node *Node = GameState.RoadNodes;
-    road_node *StartingNode = Node;
-    Node->XCellIndex = 2;
-    Node->YCellIndex = 3;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 3;
-    Node->YCellIndex = 3;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 3;
-    Node->YCellIndex = 2;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 4;
-    Node->YCellIndex = 2;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 4;
-    Node->YCellIndex = 3;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 5;
-    Node->YCellIndex = 3;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 5;
-    Node->YCellIndex = 4;
-    Node->Visited = false;
-    Node->Next[0] = Node + 1;
-    Node->NumNeighbours = 1;
-
-    Node++;
-    Node->XCellIndex = 5;
-    Node->YCellIndex = 5;
-    Node->Visited = false;
-    Node->NumNeighbours = 0;
-
-    GameState.NumRoads = 1;
-    GameState.NumRoadNodes = 8;
-    GameState.UnConnectedRoads = &StartingNode;
-    */
 
     GameState.IsInitialized = true;
   }
@@ -567,14 +587,12 @@ UpdateAndRender(uint8 *BufferMemory,
 
   DrawRoads(&GameState);
 
-  uint8 *ImageBuffer = BufferMemory + (Width * Height * 4);
-  DrawImage(&GameState, ImageBuffer, ImageWidth, ImageHeight, Width, 1 , 1);
+  DrawBuildings(&GameState);
 
-  uint8 *HouseBuffer = BufferMemory + (Width * Height * 4) + (ImageWidth * ImageHeight * 4);
-  DrawImage(&GameState, HouseBuffer, HouseWidth, HouseHeight, Width, 5, 5);
+  DrawHouses(&GameState);
 
   uint8 *CarBuffer = BufferMemory + (Width * Height * 4) + (ImageWidth * ImageHeight * 4) + (HouseWidth * HouseHeight * 4);
-  DrawImage(&GameState, CarBuffer, CarWidth, CarHeight, Width, 5, 4, 20, 20);
+  DrawImage(&GameState, (pixel *)CarBuffer, CarWidth, CarHeight, Width, 5, 4, 20, 20);
 
   if (MouseDown)
   {

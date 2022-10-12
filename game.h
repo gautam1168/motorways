@@ -45,6 +45,46 @@ struct target_buffer
   uint32 Height; // in pixels
 };
 
+enum car_facing_direction
+{
+  CarFacingDirection_Horizontal,
+  CarFacingDirection_Vertical
+};
+
+struct car
+{
+  pixel *Pixels;
+  uint16 Width;
+  uint16 Height;
+  road_node **Path; 
+  road_node *Destination;
+  uint32 NumNodesInPath;
+  float Speed;
+  car_facing_direction FacingDirection;
+  uint16 OffsetX;
+  uint16 OffsetY;
+  uint32 CurrentPathNodeIndex;
+};
+
+struct house
+{
+  pixel *Pixels;
+  uint16 Width;
+  uint16 Height;
+  uint16 CellIndexX;
+  uint16 CellIndexY;
+};
+
+struct building
+{
+  pixel *Pixels;
+  uint16 Width;
+  uint16 Height;
+  uint16 CellIndexX;
+  uint16 CellIndexY;
+};
+
+// TODO(gaurav): Push this struct onto the heap
 struct game_state 
 {
   uint8 HorizontalCellCount;
@@ -66,6 +106,22 @@ struct game_state
   bool MouseIsDown;
   uint8 MouseDownCellIndexX;
   uint8 MouseDownCellIndexY; 
+
+  uint8 *HouseBitmap;
+  uint8 *CarBitmap;
+  uint8 *BuildingBitmap;
+
+  car *Cars;
+  uint8 MaxNumCars;
+  uint8 NumCars;
+
+  house *Houses;
+  uint8 MaxNumHouses;
+  uint8 NumHouses;
+
+  building *Buildings;
+  uint8 MaxNumBuildings;
+  uint8 NumBuildings;
 };
 
 #define PushStruct(Arena, struct_type) (struct_type *)PushSize_(Arena, sizeof(struct_type))
@@ -75,7 +131,7 @@ PushSize_(memory_arena *Arena, uint32 Size)
 {
   Assert(Size > 0);
   Assert(Arena->Used + Size < Arena->Size);
-  void *Result = (void *)(Arena->Base + Arena->Used + Size);
+  void *Result = (void *)(Arena->Base + Arena->Used);
   Arena->Used += Size;
   return Result;
 }

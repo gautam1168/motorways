@@ -132,7 +132,7 @@ function startGame(canvas) {
       renderLoop();
       function renderLoop() {
         const datenow = Date.now();
-        console.log(1000/(datenow - dateprev));
+        // console.log(1000/(datenow - dateprev));
         dateprev = datenow;
         Game.UpdateAndRender(HEAP_BASE, 
           BuildingPink.width, BuildingPink.height, 
