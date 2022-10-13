@@ -113,6 +113,8 @@ struct game_state
 
   uint8 *HouseBitmap;
   uint8 *CarBitmap;
+  uint16 CarWidth;
+  uint16 CarHeight;
   uint8 *BuildingBitmap;
 
   car *Cars;

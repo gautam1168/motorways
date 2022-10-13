@@ -405,6 +405,131 @@ FindRoadNode(game_state *GameState, uint16 XIndex, uint16 YIndex)
   return Result;
 }
 
+internal house *
+GetHouseOnCell(game_state *GameState, road_node *RoadNode)
+{
+  house *Result = 0;
+
+  for (uint32 HouseIndex = 0;
+      HouseIndex < GameState->NumHouses;
+      ++HouseIndex)
+  {
+    house *CurrentHouse = GameState->Houses + HouseIndex;
+    if (CurrentHouse->CellIndexX == RoadNode->XCellIndex && CurrentHouse->CellIndexY == RoadNode->YCellIndex)
+    {
+      Result = CurrentHouse;
+      break;
+    }
+  }
+  return Result;
+}
+
+internal car *
+GetCarStartingAt(game_state *GameState, road_node *RoadNode)
+{
+  car *Result = 0;
+  for (uint32 CarIndex = 0;
+      CarIndex < GameState->NumCars;
+      ++CarIndex)
+  {
+    car *CurrentCar = GameState->Cars + CarIndex;
+    if (CurrentCar->Path[0] == RoadNode)
+    {
+      Result = CurrentCar;
+      break;
+    }
+  }
+  return Result;
+}
+
+internal void
+FindPath(game_state *GameState, car *Car)
+{
+  for (uint32 NodeIndex = 0; 
+      NodeIndex < GameState->NumRoadNodes;
+      ++NodeIndex)
+  {
+    road_node *RoadNode = GameState->RoadNodes + NodeIndex;
+    RoadNode->Visited = false;
+    RoadNode->Distance = 0xff;
+    RoadNode->PreviousInPath = 0;
+  }
+
+  road_node *Stack[50];
+  uint8 StackEmptySlotIndex = 0;
+  road_node *Start = Car->Path[Car->CurrentPathNodeIndex];
+  Stack[StackEmptySlotIndex++] = Start;
+
+  Start->Distance = 0;
+
+  bool PathFound = false;
+  while (StackEmptySlotIndex > 0 && !PathFound)
+  {
+    road_node *CurrentNode = Stack[--StackEmptySlotIndex];
+    CurrentNode->Visited = true;
+    for (uint32 NeighbourIndex = 0;
+        NeighbourIndex < CurrentNode->NumNeighbours;
+        ++NeighbourIndex)
+    {
+      road_node *Neighbour = CurrentNode->Next[NeighbourIndex];
+      if (!Neighbour->Visited)
+      {
+        if (Neighbour->Distance > CurrentNode->Distance + 1)
+        {
+          Neighbour->Distance = CurrentNode->Distance + 1;
+          Neighbour->PreviousInPath = CurrentNode;
+        }
+        Stack[StackEmptySlotIndex++] = Neighbour;
+      }
+
+      if (Neighbour == Car->Destination)
+      {
+        PathFound = true;
+      }
+    }
+  }
+
+  if (PathFound)
+  {
+    Car->NumNodesInPath = Car->Destination->Distance + 1;
+    road_node *PathNode = Car->Destination;
+    for (int32 NodeIndex = Car->NumNodesInPath - 1;
+        NodeIndex >= 0;
+        --NodeIndex)
+    {
+      Car->Path[NodeIndex] = PathNode;
+      PathNode = PathNode->PreviousInPath;
+    }
+  }
+  else
+  {
+    Car->NumNodesInPath = 0;
+  }
+}
+
+internal void
+SpawnCar(game_state *GameState, road_node *Start, road_node *Destination)
+{
+  car *ExistingCar = GetCarStartingAt(GameState, Start);
+  if (!ExistingCar)
+  {
+    car *Car = GameState->Cars + GameState->NumCars++;
+    Car->Pixels = (pixel *)GameState->CarBitmap;
+    Car->Width = GameState->CarWidth;
+    Car->Height = GameState->CarHeight;
+    Car->Path = PushArray(&GameState->Arena, 50, road_node *);
+    Car->Path[0] = Start;
+    Car->Destination = Destination;
+    Car->NumNodesInPath = 1;
+    Car->CurrentPathNodeIndex = 0;
+    Car->Speed = 1.0f;
+    Car->OffsetX = 0.28f * GameState->CellSideInPixels;
+    Car->OffsetY = 0.1f * GameState->CellSideInPixels;
+    GameState->NumCars += 1;
+    FindPath(GameState, Car);
+  }
+}
+
 internal void
 CreateAndInsertNodes(game_state *GameState, 
     uint16 StartXIndex, uint16 StartYIndex,
@@ -450,6 +575,34 @@ CreateAndInsertNodes(game_state *GameState,
   {
     StartNode->Next[StartNode->NumNeighbours++] = EndNode;
   }
+
+  NeighbourAlreadyPresent = false;
+  for (uint8 NeighbourIndex = 0;
+      NeighbourIndex < EndNode->NumNeighbours;
+      ++NeighbourIndex)
+  {
+    road_node *Neighbour = EndNode->Next[NeighbourIndex];
+    if (Neighbour)
+    {
+      NeighbourAlreadyPresent = (Neighbour->XCellIndex == StartNode->XCellIndex) &&
+        (Neighbour->YCellIndex == StartNode->YCellIndex);
+    }
+  }
+
+  if (!NeighbourAlreadyPresent)
+  {
+    EndNode->Next[EndNode->NumNeighbours++] = StartNode;
+  }
+
+  house *StartHouse = GetHouseOnCell(GameState, StartNode);
+  house *EndHouse = GetHouseOnCell(GameState, EndNode);
+
+  if (StartHouse || EndHouse)
+  {
+    road_node *Destination = FindRoadNode(GameState, 2, 3);
+    SpawnCar(GameState, StartHouse ? StartNode : EndNode, Destination);
+  }
+
 
   if (ShouldAddUnconnectedRoad) 
   {
@@ -601,70 +754,7 @@ MoveCars(game_state *GameState)
   }
 }
 
-internal void
-FindPath(game_state *GameState, car *Car)
-{
-  for (uint32 NodeIndex = 0; 
-      NodeIndex < GameState->NumRoadNodes;
-      ++NodeIndex)
-  {
-    road_node *RoadNode = GameState->RoadNodes + NodeIndex;
-    RoadNode->Visited = false;
-    RoadNode->Distance = 0xff;
-    RoadNode->PreviousInPath = 0;
-  }
 
-  road_node *Stack[50];
-  uint8 StackEmptySlotIndex = 0;
-  road_node *Start = Car->Path[Car->CurrentPathNodeIndex];
-  Stack[StackEmptySlotIndex++] = Start;
-
-  Start->Distance = 0;
-
-  bool PathFound = false;
-  while (StackEmptySlotIndex > 0 && !PathFound)
-  {
-    road_node *CurrentNode = Stack[--StackEmptySlotIndex];
-    CurrentNode->Visited = true;
-    for (uint32 NeighbourIndex = 0;
-        NeighbourIndex < CurrentNode->NumNeighbours;
-        ++NeighbourIndex)
-    {
-      road_node *Neighbour = CurrentNode->Next[NeighbourIndex];
-      if (!Neighbour->Visited)
-      {
-        if (Neighbour->Distance > CurrentNode->Distance + 1)
-        {
-          Neighbour->Distance = CurrentNode->Distance + 1;
-          Neighbour->PreviousInPath = CurrentNode;
-        }
-        Stack[StackEmptySlotIndex++] = Neighbour;
-      }
-
-      if (Neighbour == Car->Destination)
-      {
-        PathFound = true;
-      }
-    }
-  }
-
-  if (PathFound)
-  {
-    Car->NumNodesInPath = Car->Destination->Distance + 1;
-    road_node *PathNode = Car->Destination;
-    for (int32 NodeIndex = Car->NumNodesInPath - 1;
-        NodeIndex >= 0;
-        --NodeIndex)
-    {
-      Car->Path[NodeIndex] = PathNode;
-      PathNode = PathNode->PreviousInPath;
-    }
-  }
-  else
-  {
-    Car->NumNodesInPath = 0;
-  }
-}
 
 extern "C" void
 UpdateAndRender(uint8 *BufferMemory, 
@@ -698,6 +788,8 @@ UpdateAndRender(uint8 *BufferMemory,
 
     GameState.MaxNumRoadNodes = 20;
     GameState.RoadNodes = PushArray(&GameState.Arena, GameState.MaxNumRoadNodes, road_node);
+    
+    /*
     road_node *Node = GameState.RoadNodes + 0;
     Node->XCellIndex = 2;
     Node->YCellIndex = 3;
@@ -744,31 +836,22 @@ UpdateAndRender(uint8 *BufferMemory,
     Node->Next[0] = GameState.RoadNodes + 4;
     Node->NumNeighbours = 1;
     Node->Visited = false;
+    */
 
     // TODO(gaurav): Make this a part of adding a node
     GameState.NumRoadNodes = 6;
 
     GameState.MaxNumRoads = 5;
     GameState.UnConnectedRoads = PushArray(&GameState.Arena, GameState.MaxNumRoads, road_node *);
-    GameState.UnConnectedRoads[0] = GameState.RoadNodes + 0;
-    GameState.NumRoads = 1;
+    // GameState.UnConnectedRoads[0] = GameState.RoadNodes + 0;
+    GameState.NumRoads = 0;
 
     GameState.MaxNumCars = 2;
     GameState.Cars = PushArray(&GameState.Arena, GameState.MaxNumCars, car);
-    car *Car = GameState.Cars + 0;
-    Car->Pixels = (pixel *)GameState.CarBitmap;
-    Car->Width = CarWidth;
-    Car->Height = CarHeight;
-    Car->Path = PushArray(&GameState.Arena, 50, road_node *);
-    Car->Path[0] = GameState.RoadNodes + 5;
-    Car->Destination = GameState.RoadNodes + 0;
-    Car->NumNodesInPath = 1;
-    Car->CurrentPathNodeIndex = 0;
-    Car->Speed = 1.0f;
-    Car->OffsetX = 0.28f * GameState.CellSideInPixels;
-    Car->OffsetY = 0.1f * GameState.CellSideInPixels;
-    GameState.NumCars = 1;
-    FindPath(&GameState, Car);
+    GameState.CarWidth = CarWidth;
+    GameState.CarHeight = CarHeight;
+    GameState.NumCars = 0;
+    // FindPath(&GameState, Car);
 
 
     GameState.MaxNumBuildings = 2;
