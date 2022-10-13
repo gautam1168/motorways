@@ -29,6 +29,9 @@ struct road_node
   road_node *Next[8];
   uint8 NumNeighbours;
   bool Visited;
+  uint8 Distance;
+  road_node *PreviousInPath;
+
 };
 
 struct memory_arena 

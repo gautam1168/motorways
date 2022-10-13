@@ -601,6 +601,71 @@ MoveCars(game_state *GameState)
   }
 }
 
+internal void
+FindPath(game_state *GameState, car *Car)
+{
+  for (uint32 NodeIndex = 0; 
+      NodeIndex < GameState->NumRoadNodes;
+      ++NodeIndex)
+  {
+    road_node *RoadNode = GameState->RoadNodes + NodeIndex;
+    RoadNode->Visited = false;
+    RoadNode->Distance = 0xff;
+    RoadNode->PreviousInPath = 0;
+  }
+
+  road_node *Stack[50];
+  uint8 StackEmptySlotIndex = 0;
+  road_node *Start = Car->Path[Car->CurrentPathNodeIndex];
+  Stack[StackEmptySlotIndex++] = Start;
+
+  Start->Distance = 0;
+
+  bool PathFound = false;
+  while (StackEmptySlotIndex > 0 && !PathFound)
+  {
+    road_node *CurrentNode = Stack[--StackEmptySlotIndex];
+    CurrentNode->Visited = true;
+    for (uint32 NeighbourIndex = 0;
+        NeighbourIndex < CurrentNode->NumNeighbours;
+        ++NeighbourIndex)
+    {
+      road_node *Neighbour = CurrentNode->Next[NeighbourIndex];
+      if (!Neighbour->Visited)
+      {
+        if (Neighbour->Distance > CurrentNode->Distance + 1)
+        {
+          Neighbour->Distance = CurrentNode->Distance + 1;
+          Neighbour->PreviousInPath = CurrentNode;
+        }
+        Stack[StackEmptySlotIndex++] = Neighbour;
+      }
+
+      if (Neighbour == Car->Destination)
+      {
+        PathFound = true;
+      }
+    }
+  }
+
+  if (PathFound)
+  {
+    Car->NumNodesInPath = Car->Destination->Distance + 1;
+    road_node *PathNode = Car->Destination;
+    for (int32 NodeIndex = Car->NumNodesInPath - 1;
+        NodeIndex >= 0;
+        --NodeIndex)
+    {
+      Car->Path[NodeIndex] = PathNode;
+      PathNode = PathNode->PreviousInPath;
+    }
+  }
+  else
+  {
+    Car->NumNodesInPath = 0;
+  }
+}
+
 extern "C" void
 UpdateAndRender(uint8 *BufferMemory, 
     uint16 ImageWidth, uint16 ImageHeight, 
@@ -644,14 +709,16 @@ UpdateAndRender(uint8 *BufferMemory,
     Node->XCellIndex = 3;
     Node->YCellIndex = 3;
     Node->Next[0] = GameState.RoadNodes + 2;
-    Node->NumNeighbours = 1;
+    Node->Next[1] = GameState.RoadNodes + 0;
+    Node->NumNeighbours = 2;
     Node->Visited = false;
 
     Node = GameState.RoadNodes + 2;
     Node->XCellIndex = 4;
     Node->YCellIndex = 3;
     Node->Next[0] = GameState.RoadNodes + 3;
-    Node->NumNeighbours = 1;
+    Node->Next[1] = GameState.RoadNodes + 1;
+    Node->NumNeighbours = 2;
     Node->Visited = false;
 
     Node = GameState.RoadNodes + 3;
@@ -659,20 +726,23 @@ UpdateAndRender(uint8 *BufferMemory,
     Node->YCellIndex = 3;
     // TODO(gaurav): Adding number of neighbours should be a part of adding a reference
     Node->Next[0] = GameState.RoadNodes + 4;
-    Node->NumNeighbours = 1;
+    Node->Next[1] = GameState.RoadNodes + 2;
+    Node->NumNeighbours = 2;
     Node->Visited = false;
 
     Node = GameState.RoadNodes + 4;
     Node->XCellIndex = 5;
     Node->YCellIndex = 4;
     Node->Next[0] = GameState.RoadNodes + 5;
-    Node->NumNeighbours = 1;
+    Node->Next[1] = GameState.RoadNodes + 3;
+    Node->NumNeighbours = 2;
     Node->Visited = false;
 
     Node = GameState.RoadNodes + 5;
     Node->XCellIndex = 5;
     Node->YCellIndex = 5;
-    Node->NumNeighbours = 0;
+    Node->Next[0] = GameState.RoadNodes + 4;
+    Node->NumNeighbours = 1;
     Node->Visited = false;
 
     // TODO(gaurav): Make this a part of adding a node
@@ -689,20 +759,16 @@ UpdateAndRender(uint8 *BufferMemory,
     Car->Pixels = (pixel *)GameState.CarBitmap;
     Car->Width = CarWidth;
     Car->Height = CarHeight;
-    Car->Path = PushArray(&GameState.Arena, 6, road_node *);
+    Car->Path = PushArray(&GameState.Arena, 50, road_node *);
     Car->Path[0] = GameState.RoadNodes + 5;
-    Car->Path[1] = GameState.RoadNodes + 4;
-    Car->Path[2] = GameState.RoadNodes + 3;
-    Car->Path[3] = GameState.RoadNodes + 2;
-    Car->Path[4] = GameState.RoadNodes + 1;
-    Car->Path[5] = GameState.RoadNodes + 0;
     Car->Destination = GameState.RoadNodes + 0;
-    Car->NumNodesInPath = 6;
+    Car->NumNodesInPath = 1;
     Car->CurrentPathNodeIndex = 0;
     Car->Speed = 1.0f;
     Car->OffsetX = 0.28f * GameState.CellSideInPixels;
     Car->OffsetY = 0.1f * GameState.CellSideInPixels;
     GameState.NumCars = 1;
+    FindPath(&GameState, Car);
 
 
     GameState.MaxNumBuildings = 2;
