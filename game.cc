@@ -508,6 +508,18 @@ FindPath(game_state *GameState, car *Car)
 }
 
 internal void
+RecalculatePaths(game_state *GameState)
+{
+  for (uint32 CarIndex = 0;
+      CarIndex < GameState->NumCars;
+      ++CarIndex)
+  {
+    car *Car = GameState->Cars + CarIndex;
+    FindPath(GameState, Car);
+  }
+}
+
+internal void
 SpawnCar(game_state *GameState, road_node *Start, road_node *Destination)
 {
   car *ExistingCar = GetCarStartingAt(GameState, Start);
@@ -526,7 +538,6 @@ SpawnCar(game_state *GameState, road_node *Start, road_node *Destination)
     Car->OffsetX = 0.28f * GameState->CellSideInPixels;
     Car->OffsetY = 0.1f * GameState->CellSideInPixels;
     GameState->NumCars += 1;
-    FindPath(GameState, Car);
   }
 }
 
@@ -603,6 +614,7 @@ CreateAndInsertNodes(game_state *GameState,
     SpawnCar(GameState, StartHouse ? StartNode : EndNode, Destination);
   }
 
+  RecalculatePaths(GameState);
 
   if (ShouldAddUnconnectedRoad) 
   {
@@ -659,14 +671,18 @@ MoveCars(game_state *GameState)
       ++CarIndex)
   {
     car *Car = GameState->Cars + CarIndex;
-  // Find current road node of car
+    // Find current road node of car
     road_node *RoadNode = Car->Path[Car->CurrentPathNodeIndex];
-  // Find the cell its going to and determine whether to add x or y offset
+    // Find the cell its going to and determine whether to add x or y offset
     road_node *HeadedTo = 0;
     if (Car->CurrentPathNodeIndex + 1 < Car->NumNodesInPath)
     {
       HeadedTo = Car->Path[Car->CurrentPathNodeIndex + 1];;
       // Update the offset
+      // Calculate the target Offset in the next node
+      // If the node next to next is in the same direction then offset remains the same
+      // If the node next to next makes you turn on same side then offset reduces to 0
+      // If the node next to next makes you turn in the other direction then offset increases by 0.25
       if (HeadedTo->XCellIndex > RoadNode->XCellIndex)
       {
         if (Car->OffsetY < 0.25f * GameState->CellSideInPixels)
@@ -709,7 +725,7 @@ MoveCars(game_state *GameState)
         }
         else
         {
-          Car->OffsetX += GameState->DtForFrame * Car->Speed;
+          Car->OffsetY += GameState->DtForFrame * Car->Speed;
         }
       }
       else if (HeadedTo->YCellIndex < RoadNode->YCellIndex)

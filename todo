@@ -1,4 +1,9 @@
-- Memory arena
+- Always move on the leftside of the road
+- Change sprite according to movement direction
+- Find the bug in findpath
 
+- Recalculate path on every node drop
+- Move downwards
+- Memory arena
 - Generic neighbours for road_node
 - Draw roads in all directions
