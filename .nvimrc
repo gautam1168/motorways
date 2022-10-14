@@ -1,6 +1,7 @@
 function! Setup()
   execute "cd C:/Users/gauta/Codes/motorways"
   execute "Tnew"
+  execute "T shell.bat"
   execute "vnew"
 endfunction
 
