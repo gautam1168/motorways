@@ -13,6 +13,7 @@ typedef int64_t int64;
 
 #include "win32_game.h"
 #include "game.h"
+#include "game.cc"
 
 struct win32_offscreen_buffer
 {
@@ -81,7 +82,7 @@ InitializeGlobalBackBuffer(win32_offscreen_buffer *Buffer, game_memory *GameMemo
 
   Buffer->Memory = GameMemory->BackbufferStorage;
 
-  RenderWeirdGradient(Buffer, 0, 0);
+  // RenderWeirdGradient(Buffer, 0, 0);
 }
 
 internal void
@@ -209,7 +210,14 @@ int WINAPI WinMain(
           TranslateMessage(&Message);
           DispatchMessage(&Message);
         } 
-        RenderWeirdGradient(&GlobalBackBuffer, XOffset++, YOffset++);
+        // RenderWeirdGradient(&GlobalBackBuffer, XOffset++, YOffset++);
+        UpdateAndRender((uint8 *)Win32State.GameMemoryBlock, 
+            128, 192, // Building
+            64, 64, // House
+            8, 14, // Car
+            GlobalBackBuffer.Width, GlobalBackBuffer.Height,
+            64, 64, false
+            );
         {
           HDC DeviceContext = GetDC(WindowHandle);
           win32_window_dimensions WinDims = Win32GetWindowDimensions(WindowHandle);
