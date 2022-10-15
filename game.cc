@@ -637,7 +637,7 @@ internal void
 DrawBuildings(game_state *GameState)
 {
   for (uint32 BuildingIndex = 0;
-      BuildingIndex < GameState->MaxNumBuildings;
+      BuildingIndex < GameState->NumBuildings;
       ++BuildingIndex)
   {
     building *Building = GameState->Buildings + BuildingIndex;
@@ -876,6 +876,7 @@ UpdateAndRender(uint8 *BufferMemory,
     Building->Height = ImageHeight;
     Building->CellIndexX = 1;
     Building->CellIndexY = 1;
+    GameState.NumBuildings = 1;
 
     GameState.MaxNumHouses = 5;
     GameState.Houses = PushArray(&GameState.Arena, GameState.MaxNumHouses, house);

@@ -98,9 +98,11 @@ LoadBitmapIntoGameMemory(game_memory *GameMemory, uint64 Offset, uint64 Width, u
 
           bitmap_header *Header = (bitmap_header *)Result.Contents;
           loaded_bitmap LoadedBMP = {};
-          LoadedBMP.Pixels = (uint32 *)((uint8 *)GameMemory->PermanentStorage + Header->BitmapOffset);
+          LoadedBMP.Pixels = (uint32 *)GameMemory->PermanentStorage + Offset;
           LoadedBMP.Width = Header->Width;
           LoadedBMP.Height = Header->Height;
+          Assert(Header->Width == Width);
+          Assert(Header->Height == Height);
 
           Assert((Header->AlphaMask | Header->GreenMask | Header->RedMask | Header->BlueMask) == 0xffffffff);
           uint32 RedShift = 0;
@@ -113,7 +115,7 @@ LoadBitmapIntoGameMemory(game_memory *GameMemory, uint64 Offset, uint64 Width, u
           Assert(FindLowestSetBit(&GreenShift, Header->RedMask));
           Assert(FindLowestSetBit(&AlphaShift, Header->RedMask));
 
-          uint32 *Source = (uint32 *)Result.Contents;
+          uint32 *Source = (uint32 *)((uint8 *)Result.Contents + Header->BitmapOffset);
           pixel *Dest = (pixel *)LoadedBMP.Pixels;
           Assert(Header->Height == Height);
           Assert(Header->Width == Width);
@@ -332,9 +334,10 @@ int WINAPI WinMain(
     InitializeGlobalBackBuffer(&GlobalBackBuffer, &GameMemory, BufferWidth, BufferHeight);
     uint64 Offset = 0;
     LoadBitmapIntoGameMemory(&GameMemory, Offset, BuildingWidth, BuildingHeight, ".\\buildingpink.bmp");
-    Offset += BuildingWidth * BuildingHeight * 4;
+    // LoadBitmapIntoGameMemory(&GameMemory, Offset, 60, 40, ".\\structured_art.bmp");
+    Offset += BuildingWidth * BuildingHeight;
     LoadBitmapIntoGameMemory(&GameMemory, Offset, HouseWidth, HouseHeight, ".\\housepink.bmp");
-    Offset += HouseWidth * HouseHeight * 4;
+    Offset += HouseWidth * HouseHeight;
     LoadBitmapIntoGameMemory(&GameMemory, Offset, CarWidth, CarHeight, ".\\carpink.bmp");
 
     if (WindowHandle)
