@@ -216,7 +216,6 @@ DrawImage(game_state *GameState, pixel *ImageBuffer, uint16 ImageWidth,
         Pixel->R = SourcePixel->R;
         Pixel->G = SourcePixel->G;
         Pixel->B = SourcePixel->B;
-        Pixel->A = SourcePixel->A;
       }
       SourcePixel++;
     }

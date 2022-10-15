@@ -111,9 +111,9 @@ LoadBitmapIntoGameMemory(game_memory *GameMemory, uint64 Offset, uint64 Width, u
           uint32 AlphaShift = 0;
 
           Assert(FindLowestSetBit(&RedShift, Header->RedMask));
-          Assert(FindLowestSetBit(&BlueShift, Header->RedMask));
-          Assert(FindLowestSetBit(&GreenShift, Header->RedMask));
-          Assert(FindLowestSetBit(&AlphaShift, Header->RedMask));
+          Assert(FindLowestSetBit(&BlueShift, Header->BlueMask));
+          Assert(FindLowestSetBit(&GreenShift, Header->GreenMask));
+          Assert(FindLowestSetBit(&AlphaShift, Header->AlphaMask));
 
           uint32 *Source = (uint32 *)((uint8 *)Result.Contents + Header->BitmapOffset);
           pixel *Dest = (pixel *)LoadedBMP.Pixels;
