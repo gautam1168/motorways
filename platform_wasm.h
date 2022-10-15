@@ -1,5 +1,5 @@
-#if !defined(PLATFORM_WIN_H)
-#define PLATFORM_WIN_H
+#if !defined(PLATFORM_WASM_H)
+#define PLATFORM_WASM_H
 
 typedef unsigned char uint8 ;
 typedef unsigned short uint16;

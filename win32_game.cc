@@ -1,10 +1,6 @@
 #include "windows.h"
 #include "stdint.h"
 
-#define global_variable static
-#define internal static
-#define local_persist static
-
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
@@ -14,6 +10,9 @@ typedef int8_t int8;
 typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
+
+#include "win32_game.h"
+#include "game.h"
 
 struct win32_offscreen_buffer
 {
@@ -33,6 +32,7 @@ struct win32_window_dimensions
 
 global_variable bool Running;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
+global_variable int XOffset = 0, YOffset = 0;
 
 internal win32_window_dimensions 
 Win32GetWindowDimensions(HWND Window)
@@ -64,12 +64,8 @@ RenderWeirdGradient(win32_offscreen_buffer *Buffer, int XOffset, int YOffset)
 }
 
 internal void
-Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
+InitializeGlobalBackBuffer(win32_offscreen_buffer *Buffer, game_memory *GameMemory, int Width, int Height)
 {
-  if (Buffer->Memory)
-  {
-    VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
-  }
 
   Buffer->Width = Width;
   Buffer->Height = Height;
@@ -83,8 +79,7 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
   Buffer->BitmapInfo.bmiHeader.biBitCount = 32;
   Buffer->BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-  int BitmapMemorySize = Buffer->BytesPerPixel * Buffer->Width * Buffer->Height;
-  Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
+  Buffer->Memory = GameMemory->BackbufferStorage;
 
   RenderWeirdGradient(Buffer, 0, 0);
 }
@@ -121,14 +116,6 @@ LRESULT CALLBACK MainWindowCallback(
 
   switch (Message)
   {
-    case WM_SIZE:
-    {
-      RECT ClientRect;
-      GetClientRect(Window, &ClientRect);
-      int Width = ClientRect.right - ClientRect.left;
-      int Height = ClientRect.bottom - ClientRect.top;
-      Win32ResizeDIBSection(&GlobalBackBuffer, Width, Height);
-    } break;
     case WM_DESTROY:
     {
       Running = false;
@@ -163,13 +150,15 @@ int WINAPI WinMain(
     PSTR CommandLine, 
     INT ShowCode)
 {
+  win32_state Win32State = {};
+
   WNDCLASS WindowClass = {};
   WindowClass.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
   WindowClass.lpfnWndProc = MainWindowCallback;
   WindowClass.hInstance = Instance;
   WindowClass.lpszClassName = "Motorways Window";
 
-  Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
+  
 
   if (RegisterClassA(&WindowClass))
   {
@@ -187,6 +176,21 @@ int WINAPI WinMain(
         Instance,
         0
       );
+
+    game_memory GameMemory = {};
+    uint64 BufferWidth = 1280;
+    uint64 BufferHeight = 720;
+    uint64 BufferMemorySize = BufferWidth * BufferHeight * 4;
+    GameMemory.PermanentStorageSize = Megabytes(4);
+    GameMemory.TransientStorageSize = Megabytes(8);// Gigabytes((uint64)2);
+    Win32State.TotalGameMemorySize = BufferMemorySize + GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+    Win32State.GameMemoryBlock = VirtualAlloc(0, Win32State.TotalGameMemorySize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+
+    GameMemory.BackbufferStorage = Win32State.GameMemoryBlock;
+    GameMemory.PermanentStorage = ((uint8 *)Win32State.GameMemoryBlock + BufferMemorySize);
+    GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage + GameMemory.PermanentStorageSize);
+
+    InitializeGlobalBackBuffer(&GlobalBackBuffer, &GameMemory, BufferWidth, BufferHeight);
 
     if (WindowHandle)
     {

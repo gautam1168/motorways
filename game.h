@@ -3,6 +3,11 @@
 
 #define global_variable static
 #define internal static
+#define local_persist static
+#define Kilobytes(count) ((count) * 1024)
+#define Megabytes(count) (Kilobytes(count) * 1024)
+#define Gigabytes(count) (Megabytes(count) * 1024)
+#define Terabytes(count) (Gigabytes(count) * 1024)
 
 inline void
 Assert(bool stmt) 
@@ -87,6 +92,16 @@ struct building
   uint16 CellIndexY;
 };
 
+struct game_memory
+{
+  bool IsInitialized;
+  uint64 PermanentStorageSize;
+  void *BackbufferStorage;
+  void *PermanentStorage;
+  uint64 TransientStorageSize;
+  void *TransientStorage;
+};
+
 // TODO(gaurav): Push this struct onto the heap
 struct game_state 
 {
@@ -148,7 +163,5 @@ Color(uint8 R, uint8 G, uint8 B, uint8 A)
   color Result = { R, G, B, A };
   return Result;
 }
-
-
 
 #endif
