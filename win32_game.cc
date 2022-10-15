@@ -73,9 +73,9 @@ struct loaded_bitmap
   uint32 Height;
 };
 
-global_variable bool Running;
+global_variable bool Running, MouseIsDown = false;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
-global_variable int XOffset = 0, YOffset = 0;
+global_variable uint16 MouseX = 0, MouseY = 0;
 
 internal void
 LoadBitmapIntoGameMemory(game_memory *GameMemory, uint64 Offset, uint64 Width, uint64 Height, char *FileName)
@@ -175,23 +175,6 @@ Win32GetWindowDimensions(HWND Window)
 }
 
 internal void
-RenderWeirdGradient(win32_offscreen_buffer *Buffer, int XOffset, int YOffset)
-{
-  uint8 *Row = (uint8 *)Buffer->Memory;
-  for (int Y = 0; Y < Buffer->Height; ++Y)
-  {
-    uint32 *Pixel = (uint32 *)Row;
-    for (int X = 0; X < Buffer->Width; ++X)
-    {
-      uint8 Blue = (X + XOffset);
-      uint8 Green = (Y + YOffset);
-      *Pixel++ = (Green << 8) | Blue;
-    }
-    Row += Buffer->Pitch;
-  }
-}
-
-internal void
 InitializeGlobalBackBuffer(win32_offscreen_buffer *Buffer, game_memory *GameMemory, int Width, int Height)
 {
 
@@ -208,8 +191,6 @@ InitializeGlobalBackBuffer(win32_offscreen_buffer *Buffer, game_memory *GameMemo
   Buffer->BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
   Buffer->Memory = GameMemory->BackbufferStorage;
-
-  // RenderWeirdGradient(Buffer, 0, 0);
 }
 
 internal void
@@ -286,8 +267,6 @@ int WINAPI WinMain(
   WindowClass.hInstance = Instance;
   WindowClass.lpszClassName = "Motorways Window";
 
-  
-
   if (RegisterClassA(&WindowClass))
   {
     HWND WindowHandle = CreateWindowExA(
@@ -330,7 +309,6 @@ int WINAPI WinMain(
 
     if (WindowHandle)
     {
-      int XOffset = 0, YOffset = 0;
       MSG Message;
       Running = true;
       while (Running)
@@ -345,13 +323,27 @@ int WINAPI WinMain(
           TranslateMessage(&Message);
           DispatchMessage(&Message);
         } 
-        // RenderWeirdGradient(&GlobalBackBuffer, XOffset++, YOffset++);
+
+        POINT MouseP;
+        GetCursorPos(&MouseP);
+        ScreenToClient(WindowHandle, &MouseP);
+        MouseX = MouseP.x;
+        MouseY = MouseP.y;
+        if (GetKeyState(VK_LBUTTON) & (1 << 15))
+        {
+          MouseIsDown = true;
+        }
+        else
+        {
+          MouseIsDown = false;
+        }
+
         UpdateAndRender((uint8 *)Win32State.GameMemoryBlock, 
             128, 192, // Building
             64, 64, // House
             8, 14, // Car
             GlobalBackBuffer.Width, GlobalBackBuffer.Height,
-            64, 64, false
+            MouseX, MouseY, MouseIsDown
             );
         {
           HDC DeviceContext = GetDC(WindowHandle);
