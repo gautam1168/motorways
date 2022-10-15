@@ -127,29 +127,17 @@ LoadBitmapIntoGameMemory(game_memory *GameMemory, uint64 Offset, uint64 Width, u
                 X < Width;
                 ++X)
             {
-              // uint32 C = *Source++;
               uint32 C = *(Source + (Width * Y) + X);
-              real32 R = (real32)((C >> RedShift) & 0xff);
-              real32 G = (real32)((C >> GreenShift) & 0xff);
-              real32 B = (real32)((C >> BlueShift) & 0xff);
-              real32 A = (real32)((C >> AlphaShift) & 0xff);
-              real32 AN = A/255.0f;
+              uint8 R = ((C >> RedShift) & 0xff);
+              uint8 G = ((C >> GreenShift) & 0xff);
+              uint8 B = ((C >> BlueShift) & 0xff);
+              uint8 A = ((C >> AlphaShift) & 0xff);
 
-              R = R*AN;
-              G = G*AN;
-              B = B*AN;
-
-              Dest->R = (uint8)(B + 0.5f); // B
-              Dest->G = (uint8)(A + 0.5f); // A
-              Dest->B = (uint8)(R + 0.5f); // R
-              Dest->A = (uint8)(G + 0.5f); // G
+              Dest->R = R;
+              Dest->G = G;
+              Dest->B = B;
+              Dest->A = A;
               ++Dest;
-              /*
-              *Dest++ = ((uint32)(R + 0.5f) << 16 |
-                         (uint32)(G + 0.5f) << 8 |
-                         (uint32)(B + 0.5f) << 0 |
-                         (uint32)(A + 0.5f) << 24);
-              */
             }
           }
 

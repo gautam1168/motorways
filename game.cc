@@ -211,9 +211,13 @@ DrawImage(game_state *GameState, pixel *ImageBuffer, uint16 ImageWidth,
     {  
 
       pixel *Pixel = GameState->Buffer.Pixels + BufferWidth*(YIndex + OffsetY) + (XIndex + OffsetX);
-      Pixel->R = SourcePixel->R;
-      Pixel->G = SourcePixel->G;
-      Pixel->B = SourcePixel->B;
+      if (Pixel->A == 0xff) 
+      {
+        Pixel->R = SourcePixel->R;
+        Pixel->G = SourcePixel->G;
+        Pixel->B = SourcePixel->B;
+        Pixel->A = SourcePixel->A;
+      }
       SourcePixel++;
     }
   }
