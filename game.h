@@ -164,4 +164,33 @@ Color(uint8 R, uint8 G, uint8 B, uint8 A)
   return Result;
 }
 
+inline uint32
+SafeTruncateUint64(uint64 Value)
+{
+  Assert(Value <= 0xFFFFFFFF);
+  return (uint32)Value;
+}
+
+inline bool
+FindLowestSetBit(uint32 *Index, uint32 Mask)
+{
+  bool Found = false;
+#if COMPILER_MSVC
+  Found = _BitScanForward(Index, Mask);
+#else
+  for (uint32 Test = 0;
+      Test < 32;
+      ++Test)
+  {
+    if (Mask & (1 << Test))
+    {
+      Found = true;
+      *Index = Test;
+      break;
+    }
+  }
+#endif
+  return Found;
+}
+
 #endif
